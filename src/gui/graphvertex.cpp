@@ -1,12 +1,14 @@
 //
 // statement of purpose
 //
+#include "graphedge.hpp"
 #include "graphvertex.hpp"
 
+
 // public:
-GraphVertex::GraphVertex(/*QMenu * contextmenu,*/ unsigned long vid
+GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
                          , QGraphicsItem * parent)
-   : QGraphicsEllipseItem(parent), /*contextmenu_v(contextmenu),*/ vertexid(vid) {
+   : QGraphicsEllipseItem(parent), contextmenu_v(menu), vertexid(vid) {
    // standard vertex: fill, circumference pen
    setRect(vertexboundaryrect);
    setBrush(vertexfill);
