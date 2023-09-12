@@ -16,8 +16,5 @@ MainWindow::MainWindow(QWidget *parent)
    setCentralWidget(view);
 //   view->set_lattice(15,15);
 
-
-   view->showMaximized();
-
 }
 
