@@ -18,7 +18,6 @@ add_executable(tuQ src/main.cpp
         src/gui/graphedge.cpp
         src/gui/graphvertex.cpp
         src/gui/graphview.cpp
-        src/gui/mainwindow.cpp
 #        src/layout/gates_lattice_set.cpp
 #        src/layout/io_circuit.cpp
 )
