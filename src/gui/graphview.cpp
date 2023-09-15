@@ -71,7 +71,7 @@ void GraphView::mouseMoveEvent(QMouseEvent * event) {
 
    // draw the proxy (Graph)Edge instantiated through mousePressEvent
    if (tracer != nullptr && clabel->text() == "E"){
-      QLineF growline(tracer->line().p1(), event->screenPos());
+      QLineF growline(tracer->line().p1(), mapToScene(event->pos()));
       tracer->setLine(growline);
    }
    QGraphicsView::mouseMoveEvent(event);
@@ -86,10 +86,11 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphEdge, pt. 1
    if (clabel->text() == "E"){
       // collect the p1 vertex at the cursor hotspot at 'click'
-      QPoint vpos= event->pos();
-      QGraphicsItem * edge_origin= itemAt(vpos);
+      QPoint vertex_at_view= event->pos();
+      QPointF vertex_at_scene= mapToScene(vertex_at_view);
+      QGraphicsItem * edge_origin= scene->itemAt(vertex_at_scene,transform());
 
-      // prevent runtime exception of no vertex at the cursor hotspot at
+      // prevent runtime exception from no vertex at the cursor hotspot upon
       // 'click'
       if (edge_origin == nullptr){
          cursorState= false;
@@ -101,13 +102,13 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
 
       // initialise a 'tracer' line segment.  The actual edge will be set in
       // arrears at the subsequent mouseReleaseEvent
-      tracer= new QGraphicsLineItem(QLineF(vpos,vpos));
+      tracer= new QGraphicsLineItem(QLineF(vertex_at_scene, vertex_at_scene));
       tracer->setPen(QPen(Qt::black,2));
-
       scene->addItem(tracer);
 
       // reset cursor state
       cursorState= false;
+      // 'E' is required as a boolean proxy in subsequent QMouseEvents
       clabel->hide();
    }
    // local complementation
@@ -156,7 +157,55 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
 
 void GraphView::mouseReleaseEvent(QMouseEvent * event) {
    // instantiate: GraphEdge, pt. 2
+   if (tracer != nullptr && clabel->text() == "E"){
+      // staging: the vertex identified at p1 coordinates
+      QList<QGraphicsItem *> p1items= scene->items(tracer->line().p1());
+      // remove any existing instance of tracer in p1items
+      if (p1items.count() && p1items.first() == tracer)
+         p1items.removeFirst();
 
+      // staging: the vertex identified at p2 coordinates
+      QList<QGraphicsItem *> p2items= scene->items(tracer->line().p2());
+      // as with p1items, remove any existing instance of tracer
+      if (p2items.count() && p2items.first() == tracer)
+         p2items.removeFirst();
+
+      // vertices at p1 and p2 now selected so back out the tracer reference
+      // from scene...
+      scene->removeItem(tracer);
+      // then, deallocate the memory
+      delete tracer;
+
+      if (p1items.count() > 0 && p2items.count() > 0
+      && p1items.first()->type() == GraphVertex::Type
+      && p2items.first()->type() == GraphVertex::Type
+      && p1items.first() != p2items.first()){
+         // pointer -> the GraphVertex at p1 coordinates
+         GraphVertex * p1v= qgraphicsitem_cast<GraphVertex *>(p1items.first());
+         // restore the 'movable' property of p1v, which was suspended at
+         // mousePressEvent
+         p1v->setFlag(QGraphicsItem::ItemIsMovable, true);
+         // drop focus from p1v
+         p1v->setSelected(false);
+         // pointer -> the GraphVertex at p2 coordinates
+         GraphVertex * p2v= qgraphicsitem_cast<GraphVertex *>(p2items.first());
+         // use p1v and p2v as constructors to instantiate the edge
+         auto * e= new GraphEdge(p1v, p2v, nullptr);   // TO DO: initialise, contextmenu
+
+         // add the edge to (QVector) 'edges' of vertices at both p1 and p2
+         // coordinates
+         p1v->addEdge(e);
+         p2v->addEdge(e);
+
+         scene->addItem(e);
+
+         // clear the (mousePressEvent) clabel->hide()
+         if (clabel->text() == "E")
+            clabel->clear();
+      }
+   }
+   tracer= nullptr;
+   QGraphicsView::mouseReleaseEvent(event);
 }
 
 

@@ -16,6 +16,8 @@ class GraphVertex : public QGraphicsEllipseItem
 {
    QMenu * contextmenu_v {};
 
+   QVector<GraphEdge *> edges;
+
    // vertex data
    QSizeF radius {45,45};
    QPointF topleft {0,0};
@@ -33,6 +35,8 @@ public:
    // qgraphicsitem_cast (type), QGraphicsEllipseItem::Type = 4
    explicit GraphVertex(QMenu *, unsigned long vid= 0
          , QGraphicsItem * parent= nullptr);
+
+   void addEdge(GraphEdge * edge) { edges.push_back(edge); };
 
 protected:
 //   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
