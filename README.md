@@ -1,5 +1,5 @@
-From the farsi  <bdo dir="rtl"> تور </bdo>  for 'net', t&#363;Q is an interactive tool for modelling 
-graph states and running them in a quantum simulator.  To that end t&#363;Q 
+From the Farsi  <bdo dir="rtl"> تور </bdo>  for 'net', t&#363;Q is an interactive tool both for
+modelling graph states and running them in a quantum simulator.  To that end t&#363;Q 
 empowers the user to simulate cluster-based quantum computing as an alternative 
 to circuit-based quantum computing.  Furthermore the user can output its graph 
 in openQASM format thereby enabling it to run a graph on any quantum computing 
