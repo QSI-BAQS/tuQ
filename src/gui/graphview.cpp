@@ -51,13 +51,15 @@ void GraphView::keyPressEvent(QKeyEvent * event) {
    || event->key() == Qt::Key_X
    || event->key() == Qt::Key_Y
    || event->key() == Qt::Key_Z){
-      setCursorLabel(event->text());
       cursorState= true;
+
+      cursor_tag= event->text();
+      setCursorLabel(& cursor_tag);
 /*  Q2Graph code includes this + comment for Qt::Key_Z
       clearSelection()
 */
-      QGraphicsView::keyPressEvent(event);
    }
+   QGraphicsView::keyPressEvent(event);
 }
 
 void GraphView::mouseMoveEvent(QMouseEvent * event) {
@@ -210,17 +212,18 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
 
 
 // private:
-void GraphView::setCursorLabel(QString tag) {
+void GraphView::setCursorLabel(QString * tag) {
    // create E/O/V/X/Y/Z label for cursor
    // pre-condition: cursorState == true
    // post-condition: a visible, persistent label of the cursor
 
    if (cursorState){
       // label appears at (x,y), relative to cursor
-      clabel->move(QCursor::pos().x() + 15, QCursor::pos().y() + 10);
+      QPoint cursor_pos {QCursor::pos().x() + 15, QCursor::pos().y() + 10};
+      clabel->move(cursor_pos);
 
       // set label
-      tag.isLower() ? clabel->setText(tag.toUpper()) : clabel->setText(tag);
+      tag->isLower() ? clabel->setText(tag->toUpper()) : clabel->setText(* tag);
 
       // reveal a hidden cursor
       if (clabel->isHidden())

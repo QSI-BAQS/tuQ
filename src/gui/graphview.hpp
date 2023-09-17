@@ -18,10 +18,11 @@ class GraphView : public QGraphicsView
    bool cursorState {false};
    unsigned long edges_count {1};
    QGraphicsScene * scene;
+   QString cursor_tag {};
    QGraphicsLineItem * tracer {};
    unsigned long vertices_count {1};
 
-   void setCursorLabel(QString);
+   void setCursorLabel(QString *);
 
 public:
    explicit GraphView(QWidget *parent= nullptr);
