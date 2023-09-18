@@ -26,7 +26,7 @@ GraphEdge::GraphEdge(GraphVertex * p1v, GraphVertex * p2v, QMenu * menu
 }
 
 void GraphEdge::resetEdgePosition() {
-   if (p1vertex != NULL && p2vertex != NULL){
+   if (p1vertex != nullptr && p2vertex != nullptr){
       QLineF edge(mapFromItem(p1vertex, 10, 10)
             , mapFromItem(p2vertex, 10, 10));
       setLine(edge);
