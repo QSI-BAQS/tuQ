@@ -1,5 +1,5 @@
-#ifndef GRAPHVIEW_HPP
-#define GRAPHVIEW_HPP
+#ifndef TUQ_GRAPHVIEW_HPP
+#define TUQ_GRAPHVIEW_HPP
 
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
@@ -37,4 +37,4 @@ protected:
 
 };
 
-#endif //GRAPHVIEW_HPP
+#endif //TUQ_GRAPHVIEW_HPP

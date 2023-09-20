@@ -1,5 +1,5 @@
 //
-// statement of purpose
+// specify view/scene objects
 //
 # include "graphview.hpp"
 
