@@ -1,5 +1,5 @@
 //
-// statement of purpose
+// specify a vertex object
 //
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
@@ -21,6 +21,27 @@ GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
    setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 }
 
+
+// protected:
+// menu options at click
+/*void GraphVertex::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
+   scene()->clearSelection();
+   setSelected(true);
+//   contextmenu_v->exec(event->scenePos());
+}
+*/
+// moving a vertex moves any attached edge with it
+QVariant GraphVertex::itemChange(GraphicsItemChange change
+                                 , const QVariant & value) {
+   if (change == QGraphicsItem::ItemPositionChange){
+      for (GraphEdge * edge : qAsConst(edges))
+         edge->resetEdgePosition();
+   }
+
+   return value;
+}
+
+// enable dynamic provisioning of vertices
 void GraphVertex::paint(QPainter * painter
                         , const QStyleOptionGraphicsItem * option
                         , QWidget * widget) {
@@ -37,9 +58,3 @@ void GraphVertex::paint(QPainter * painter
 }
 
 
-// protected:
-/*void GraphVertex::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
-   scene()->clearSelection();
-   setSelected(true);
-//   contextmenu_v->exec(event->scenePos());
-}*/

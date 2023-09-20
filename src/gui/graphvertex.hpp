@@ -1,5 +1,5 @@
-#ifndef GRAPHVERTEX_HPP
-#define GRAPHVERTEX_HPP
+#ifndef TUQ_GRAPHVERTEX_HPP
+#define TUQ_GRAPHVERTEX_HPP
 
 #include "graphview.hpp"
 
@@ -40,8 +40,9 @@ public:
 
 protected:
 //   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
+   QVariant itemChange(GraphicsItemChange, const QVariant &) override;
    void paint(QPainter *, const QStyleOptionGraphicsItem *
               , QWidget *) override;
 };
 
-#endif // GRAPHVERTEX_HPP
+#endif //TUQ_GRAPHVERTEX_HPP
