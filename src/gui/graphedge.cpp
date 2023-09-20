@@ -1,5 +1,5 @@
 //
-// statement of purpose
+// specify an edge object
 //
 
 #include "graphedge.hpp"
