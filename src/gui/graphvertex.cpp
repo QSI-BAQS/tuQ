@@ -23,7 +23,7 @@ GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
 
 
 // protected:
-// menu options at click
+// vertex menu options at click
 /*void GraphVertex::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
    scene()->clearSelection();
    setSelected(true);
