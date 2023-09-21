@@ -1,12 +1,10 @@
 #ifndef TUQ_GRAPHVERTEX_HPP
 #define TUQ_GRAPHVERTEX_HPP
 
-#include "graphview.hpp"
 
-#include <QDebug>
 #include <QGraphicsEllipseItem>
-#include <QMenu>
 //#include <QGraphicsSceneContextMenuEvent>
+#include <QMenu>
 #include <QPainter>
 
 
