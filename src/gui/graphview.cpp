@@ -3,6 +3,7 @@
 //
 # include "graphview.hpp"
 
+#include <QFile>
 #include <QKeyEvent>
 
 
@@ -19,6 +20,22 @@ GraphView::GraphView(QWidget *parent)
    clabel->setWindowFlag(Qt::ToolTip);
    clabel->setWindowOpacity(0);
 }
+
+// count of items in scene by QGraphicsItem::Type
+unsigned long GraphView::items_count(int item_type) {
+   unsigned long counter {1};
+   for (QGraphicsItem * item : scene->items()) {
+      (item->type() == item_type) ? counter += 1 : counter= 0;
+   }
+
+   return counter;
+}
+
+// read instructions for file (.txt) loading
+void GraphView::openGraph(QString rfile) {}
+
+// write instructions for file (.txt) saving
+void GraphView::saveGraph(QString wfile) const {}
 
 void GraphView::set_lattice(unsigned long m, unsigned long n) {
 //   circuit-to-graph layout
@@ -122,8 +139,8 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      auto * v= new GraphVertex(nullptr, vertices_count);   // TO DO: initialise, contextmenu
-      vertices_count += 1;
+      unsigned long v_count= items_count(4);
+      auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
 
       // place vertex at 'click' position
       QPointF pos_xy= mapToScene(event->x()-15, event->y());
