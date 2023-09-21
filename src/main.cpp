@@ -1,4 +1,4 @@
-#include "gui/graphview.hpp"
+#include "gui/mainwindow.hpp"
 #include "layout/gates_lattice_set.hpp"
 #include "layout/io_circuit.hpp"
 
@@ -11,17 +11,13 @@ int main(int argc, char *argv[])
 // gui/ main
 
    QApplication tuq(argc, argv);
-
-   // move and reformat as helper function: begin
-   auto * view= new GraphView();
-   view->setWindowTitle("tuQ");
-   view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-   // helper function: end
+   MainWindow window;
 
 //   view->set_lattice(15,15);
-   view->show();
+   window.show();
 
    return tuq.exec();
+
 // layout/ main
 /*
    std::cout << "key in /path/to/json/circuit then, press Enter:" << std::endl;
