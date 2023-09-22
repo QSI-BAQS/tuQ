@@ -3,8 +3,10 @@
 //
 # include "graphview.hpp"
 
+#include <QDebug>
 #include <QFile>
 #include <QKeyEvent>
+#include <QTextStream>
 
 
 // public:
@@ -25,17 +27,49 @@ GraphView::GraphView(QWidget *parent)
 unsigned long GraphView::items_count(int item_type) {
    unsigned long counter {1};
    for (QGraphicsItem * item : scene->items()) {
-      (item->type() == item_type) ? counter += 1 : counter= 0;
+      if (item->type() == item_type)
+         counter += 1;
    }
 
    return counter;
 }
 
-// read instructions for file (.txt) loading
+// read instructions, format .txt
 void GraphView::openGraph(QString rfile) {}
 
-// write instructions for file (.txt) saving
-void GraphView::saveGraph(QString wfile) const {}
+// write instructions, format .txt
+void GraphView::saveGraph(QString wfile) const {
+   QFile writefile(wfile);
+// BUG: write error-handling for no file name specified
+
+   // open as WriteOnly, Text
+   if (!writefile.open(QFile::WriteOnly | QFile::Text)){
+      qDebug() << " file is not open";
+      return ;
+   }
+
+   QTextStream write(&writefile);
+   for (QGraphicsItem * item : scene->items()) {
+      // save only vertex specifications
+      if (item->type() == 4){
+         auto v= qgraphicsitem_cast<GraphVertex *>(item);
+         // vertex ID
+         write << *v->vertexID << " "
+         // vertex pos
+         << v->pos().x() << " " << v->pos().y();
+         // edge coordinates
+         for (const GraphEdge * e: *v->alledges) {
+            if (e->p1vertex)
+               write << " " << e->p1vertex->x() << " " << e->p1vertex->y();
+            if (e->p2vertex)
+               write << " " << e->p2vertex->x() << " " << e->p2vertex->y();
+         }
+         write << "\n";
+      }
+   }
+   writefile.flush();
+   writefile.close();
+}
 
 void GraphView::set_lattice(unsigned long m, unsigned long n) {
 //   circuit-to-graph layout
