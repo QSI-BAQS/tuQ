@@ -33,6 +33,7 @@ public:
    // qgraphicsitem_cast (type), QGraphicsEllipseItem::Type = 4
    explicit GraphVertex(QMenu *, unsigned long vid= 0
          , QGraphicsItem * parent= nullptr);
+   
    const QVector<GraphEdge *> * alledges {& edges};
    const unsigned long * vertexID {& vertexid};
 
