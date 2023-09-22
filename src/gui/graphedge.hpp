@@ -12,16 +12,16 @@ class GraphEdge : public QGraphicsLineItem
 
    QPen edgecolour {Qt::black, 2};
 
-   GraphVertex * p1vertex {};
-   GraphVertex * p2vertex {};
+   GraphVertex * p1v {};
+   GraphVertex * p2v {};
 
 public:
    // qgraphicsitem_cast (type), QGraphicsLineItem::Type = 6
    GraphEdge(GraphVertex *, GraphVertex *, QMenu *
              , QGraphicsItem * parent= nullptr);
 
-   GraphVertex * p1v() const { return p1vertex; };
-   GraphVertex * p2v() const  { return p2vertex; };
+   const GraphVertex * p1vertex {p1v};
+   const GraphVertex * p2vertex {p2v};
 
    void resetEdgePosition();
 

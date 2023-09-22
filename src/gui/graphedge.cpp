@@ -7,17 +7,17 @@
 
 
 // public:
-GraphEdge::GraphEdge(GraphVertex * p1v, GraphVertex * p2v, QMenu * menu
+GraphEdge::GraphEdge(GraphVertex * p1vx, GraphVertex * p2vx, QMenu * menu
                      , QGraphicsItem *parent)
-   : QGraphicsLineItem(parent), p1vertex(p1v), p2vertex(p2v)
+   : QGraphicsLineItem(parent), p1v(p1vx), p2v(p2vx)
    , contextmenu_e(menu)
 {
    // standard edge: colour, width
    setPen(edgecolour);
 
    // instantiate the edge; position edge behind its p1 and p2 vertices
-   QLineF edge(mapFromItem(p1vertex, 10, 10)
-      , mapFromItem(p2vertex, 10, 10));
+   QLineF edge(mapFromItem(p1v, 10, 10)
+      , mapFromItem(p2v, 10, 10));
    setLine(edge);
    setZValue(-999);
 
@@ -26,9 +26,9 @@ GraphEdge::GraphEdge(GraphVertex * p1v, GraphVertex * p2v, QMenu * menu
 }
 
 void GraphEdge::resetEdgePosition() {
-   if (p1vertex != nullptr && p2vertex != nullptr){
-      QLineF edge(mapFromItem(p1vertex, 10, 10)
-            , mapFromItem(p2vertex, 10, 10));
+   if (p1v != nullptr && p2v != nullptr){
+      QLineF edge(mapFromItem(p1v, 10, 10)
+            , mapFromItem(p2v, 10, 10));
       setLine(edge);
    }
 }
