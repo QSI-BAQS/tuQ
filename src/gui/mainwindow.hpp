@@ -19,7 +19,7 @@ public:
    explicit MainWindow(QWidget * parent= nullptr);
 
 //   void openGraphDialog();
-//   void saveGraphDialog();
+   void saveGraphDialog();
 };
 
 #endif // TUQ_MAINWINDOW_HPP
