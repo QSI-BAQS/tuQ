@@ -243,7 +243,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      unsigned long v_count= items_count(4, scene);
+      unsigned long v_count= h_items_count(4, scene);
       auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
 
       // place vertex at 'click' position
