@@ -3,6 +3,7 @@
 
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
+#include "gui_helpers.hpp"
 
 #include <QGraphicsView>
 #include <QLabel>
@@ -14,19 +15,17 @@ class GraphView : public QGraphicsView
 
    QLabel * clabel {};
    bool cursorState {false};
-   QString cursor_tag {};
    unsigned long edges_count {1};
    QGraphicsScene * scene;
    QGraphicsLineItem * tracer {};
 
-   void setCursorLabel(QString *);
+   void setCursorLabel(int);
 
 public:
    explicit GraphView(QWidget *parent= nullptr);
 
-   unsigned long items_count(int);
-   void openGraph(QString);
-   void saveGraph(QString) const;
+   void openGraph(const QString &);
+   void saveGraph(const QString &);
    void set_lattice(unsigned long, unsigned long);
 
 

@@ -20,29 +20,97 @@ GraphView::GraphView(QWidget *parent)
 
    clabel= new QLabel;
    clabel->setWindowFlag(Qt::ToolTip);
-   clabel->setWindowOpacity(0);
+//   clabel->setWindowOpacity(0);
 }
 
-// count of items in scene by QGraphicsItem::Type
-unsigned long GraphView::items_count(int item_type) {
-   unsigned long counter {1};
-   for (QGraphicsItem * item : scene->items()) {
-      if (item->type() == item_type)
-         counter += 1;
-   }
-
-   return counter;
-}
 
 // read instructions, format .txt
-void GraphView::openGraph(QString rfile) {}
+void GraphView::openGraph(const QString & rfile) {
+   QFile loadfile(rfile);
+
+   // read conditions: read-only, text
+   if (!loadfile.open(QFile::ReadOnly | QFile::Text)){
+      qDebug() << " file is not open";
+      return ;
+   }
+
+   QTextStream in_stream(&loadfile);
+   QString vertex_data {in_stream.readLine()};
+
+   while (!vertex_data.isNull()) {
+      QStringList stats= vertex_data.split(QChar(' '));
+      // 1. reproduce vertex
+      unsigned long vid= stats.at(0).toULong();
+      auto * v= new GraphVertex(nullptr, vid);   // TO DO: initialise, contextmenu
+
+      // set vertex position
+      double x= stats.at(1).toDouble();
+      double y= stats.at(2).toDouble();
+      v->setPos(x,y);
+
+      // add vertex to scene
+      scene->addItem(v);
+
+      // 2a. accumulate 'opposite edges'
+      if (stats.size() > 3){
+         double epos_x;
+         double epos_y;
+         unsigned long edge_coordinates {1};
+
+         for (int counter= 3; counter < stats.size() ; ++counter) {
+            if (edge_coordinates % 2 == 0){
+               epos_y= stats.at(counter).toDouble();
+               QPointF end_pos {epos_x,epos_y};
+               v->opposite_ends.push_back(end_pos);
+               epos_x= 0;
+               epos_y= 0;
+            }
+            else
+               epos_x= stats.at(counter).toDouble();
+
+            edge_coordinates += 1;
+         }
+      }
+      vertex_data= in_stream.readLine();
+   }
+
+   loadfile.close();
+
+   // 2b. reproduce edges
+   for (QGraphicsItem * item : scene->items()) {
+      // only type GraphVertex
+      if (item->type() == 4){
+         auto v{qgraphicsitem_cast<GraphVertex *>(item)};
+         // does v carry edges?
+         if (!v->opposite_ends.isEmpty()){
+            for (QPointF vpos : qAsConst(v->opposite_ends)) {
+               // a QPointF element of opposite_ends does not align with any
+               // QPointF of scene coordinates; swap vpos for item->pos()...
+               QPoint item_xy {(int) vpos.x(), (int) vpos.y()};
+               // then locate item @ item coordinates within scene
+               QGraphicsItem * ptr_other_v= scene->itemAt(mapToParent(item_xy)
+                     , QTransform());
+               auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
+               // confirm the opposite end is type GraphVertex
+               if (other_v->type() == 4){
+                  GraphEdge * e= new GraphEdge(v,other_v, nullptr);
+                  v->addEdge(e);
+                  other_v->addEdge(e);
+
+                  scene->addItem(e);
+               }
+            }
+            v->opposite_ends.clear();
+         }
+      }
+   }
+}
 
 // write instructions, format .txt
-void GraphView::saveGraph(QString wfile) const {
+void GraphView::saveGraph(const QString & wfile) {
    QFile writefile(wfile);
-// BUG: write error-handling for no file name specified
 
-   // open as WriteOnly, Text
+   // save conditions: write-only, text
    if (!writefile.open(QFile::WriteOnly | QFile::Text)){
       qDebug() << " file is not open";
       return ;
@@ -50,18 +118,22 @@ void GraphView::saveGraph(QString wfile) const {
 
    QTextStream write(&writefile);
    for (QGraphicsItem * item : scene->items()) {
-      // save only vertex specifications
+      // save only type GraphVertex specifications
       if (item->type() == 4){
          auto v= qgraphicsitem_cast<GraphVertex *>(item);
          // vertex ID
          write << *v->vertexID << " "
          // vertex pos
          << v->pos().x() << " " << v->pos().y();
-         // edge coordinates
+         // edge coordinates (unique: no 'flips')
          for (const GraphEdge * e: *v->alledges) {
-            if (e->p1vertex)
+            if (e->p1vertex
+            && e->p1vertex->x() != v->pos().x()
+            && e->p1vertex->y() != v->pos().y())
                write << " " << e->p1vertex->x() << " " << e->p1vertex->y();
-            if (e->p2vertex)
+            if (e->p2vertex
+            && e->p2vertex->x() != v->pos().x()
+            && e->p2vertex->y() != v->pos().y())
                write << " " << e->p2vertex->x() << " " << e->p2vertex->y();
          }
          write << "\n";
@@ -103,9 +175,7 @@ void GraphView::keyPressEvent(QKeyEvent * event) {
    || event->key() == Qt::Key_Y
    || event->key() == Qt::Key_Z){
       cursorState= true;
-
-      cursor_tag= event->text();
-      setCursorLabel(& cursor_tag);
+      setCursorLabel(event->key());
 /*  Q2Graph code includes this + comment for Qt::Key_Z
       clearSelection()
 */
@@ -141,7 +211,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       // collect the p1 vertex at the cursor hotspot at 'click'
       QPoint vertex_at_view= event->pos();
       QPointF vertex_at_scene= mapToScene(vertex_at_view);
-      QGraphicsItem * edge_origin= scene->itemAt(vertex_at_scene,transform());
+      QGraphicsItem * edge_origin= scene->itemAt(vertex_at_scene,QTransform());
 
       // prevent runtime exception from no vertex at the cursor hotspot upon
       // 'click'
@@ -173,7 +243,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      unsigned long v_count= items_count(4);
+      unsigned long v_count= items_count(4, scene);
       auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
 
       // place vertex at 'click' position
@@ -263,10 +333,13 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
 
 
 // private:
-void GraphView::setCursorLabel(QString * tag) {
+void GraphView::setCursorLabel(int key) {
    // create E/O/V/X/Y/Z label for cursor
    // pre-condition: cursorState == true
    // post-condition: a visible, persistent label of the cursor
+
+   // int to upper case QString
+   QString tag= (QString) toupper(key);
 
    if (cursorState){
       // label appears at (x,y), relative to cursor
@@ -274,7 +347,7 @@ void GraphView::setCursorLabel(QString * tag) {
       clabel->move(cursor_pos);
 
       // set label
-      tag->isLower() ? clabel->setText(tag->toUpper()) : clabel->setText(* tag);
+      clabel->setText(tag);
 
       // reveal a hidden cursor
       if (clabel->isHidden())
