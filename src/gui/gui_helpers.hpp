@@ -5,7 +5,7 @@
 #include <QGraphicsScene>
 
 
-unsigned long items_count(int, QGraphicsScene *);
+unsigned long h_items_count(int, QGraphicsScene *);
 
 
 #endif //TUQ_GUI_HELPERS_HPP

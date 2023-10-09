@@ -6,7 +6,7 @@
 
 
 // count of items in scene by QGraphicsItem::Type
-unsigned long items_count(int item_type, QGraphicsScene * scene) {
+unsigned long h_items_count(int item_type, QGraphicsScene * scene) {
    unsigned long counter {1};
    for (QGraphicsItem * item : scene->items()) {
       if (item->type() == item_type)
