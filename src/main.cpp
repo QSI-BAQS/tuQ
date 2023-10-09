@@ -8,8 +8,6 @@
 
 int main(int argc, char *argv[])
 {
-// gui/ main
-
    QApplication tuq(argc, argv);
    MainWindow window;
 
