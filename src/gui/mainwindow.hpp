@@ -14,12 +14,14 @@ class MainWindow : public QMainWindow
    GraphView * view {};
 
    void createMenus();
+   void openGraphDialog(const QString *);
+   void saveGraphDialog(const QString *);
 
 public:
    explicit MainWindow(QWidget * parent= nullptr);
 
-//   void openGraphDialog();
-   void saveGraphDialog();
+   const QString * graphopenfile;
+   const QString * graphsavefile;
 };
 
 #endif // TUQ_MAINWINDOW_HPP
