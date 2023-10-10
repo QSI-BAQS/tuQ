@@ -13,6 +13,7 @@
 GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
+   // Is this big enough? set_lattice runs off the page
    scene->setSceneRect(-1500,-1500,3000,3000);
 
    setScene(scene);
@@ -29,7 +30,7 @@ void GraphView::openGraph(const QString & rfile) {
    QFile loadfile(rfile);
 
    // read conditions: read-only, text
-   if (!loadfile.open(QFile::ReadOnly | QFile::Text)){
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
       qDebug() << " file is not open";
       return ;
    }
@@ -106,12 +107,49 @@ void GraphView::openGraph(const QString & rfile) {
    }
 }
 
+// read a quantum circuit file, format .json (schemas: 'native', which is
+// adapted from ionQ; and Google Cirq, which is reformatted to the native
+// schema). See comments of src/layout/io_circuit.cpp.
+void GraphView::readCircuit(const QString & cjson) {
+   // convert QString to utf8 string
+   std::string cjson_utf8= cjson.toUtf8().constData();
+   std::ifstream json_circuit {cjson_utf8};
+
+   if (json_circuit.is_open()){
+      using json= nlohmann::json;
+
+      json parse_circuit= json::parse(json_circuit);   // create json object
+      auto cirq_check= parse_circuit.find("cirq_type");
+
+      if (cirq_check != parse_circuit.end()){
+         // format of input circuit json: cirq
+         json ionq_schema= cirq_to_ionq_schema(parse_circuit);
+         etch_circuit= ionq_schema;
+      }
+      // format of input circuit json: ionQ
+      else {
+         if (non_adjacent_gate(parse_circuit))
+            qDebug() << "process aborted: non-adjacent gate in circuit";
+
+         etch_circuit= parse_circuit;
+      }
+
+      unsigned long cluster_state_rows= rows_m(gate_by_address, etch_circuit);
+      unsigned long cluster_state_columns= cols_n(gate_by_address
+            , etch_circuit);
+
+      set_lattice(cluster_state_rows, cluster_state_columns);
+   }
+   else
+      qDebug() << "That file is not opening";
+}
+
 // write instructions, format .txt
 void GraphView::saveGraph(const QString & wfile) {
    QFile writefile(wfile);
 
    // save conditions: write-only, text
-   if (!writefile.open(QFile::WriteOnly | QFile::Text)){
+   if (!writefile.open(QIODevice::WriteOnly | QIODevice::Text)){
       qDebug() << " file is not open";
       return ;
    }
@@ -143,6 +181,8 @@ void GraphView::saveGraph(const QString & wfile) {
    writefile.close();
 }
 
+
+// TO DO: gut and reconfigure to include 'Zed-ing' out superfluous qbits
 void GraphView::set_lattice(unsigned long m, unsigned long n) {
 //   circuit-to-graph layout
 //   pre-condition:
