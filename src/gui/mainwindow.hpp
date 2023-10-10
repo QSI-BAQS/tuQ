@@ -11,16 +11,19 @@ class MainWindow : public QMainWindow
    Q_OBJECT
 
    QMenu * fileMenu;
+   QMenu * circuitMenu;
    GraphView * view {};
 
    void createMenus();
    void openGraphDialog(const QString *);
+   void readCircuitDialog(const QString *);
    void saveGraphDialog(const QString *);
 
 public:
    explicit MainWindow(QWidget * parent= nullptr);
 
    const QString * graphopenfile;
+   const QString * graphreadcircuit;
    const QString * graphsavefile;
 };
 
