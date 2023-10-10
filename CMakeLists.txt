@@ -24,6 +24,8 @@ add_executable(tuQ src/main.cpp
         src/layout/io_circuit.cpp
 )
 
+target_include_directories(tuQ PRIVATE src/layout/)
+
 target_link_libraries(tuQ
         Qt5::Core
         Qt5::Gui
