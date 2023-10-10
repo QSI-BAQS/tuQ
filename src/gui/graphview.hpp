@@ -5,6 +5,12 @@
 #include "graphvertex.hpp"
 #include "gui_helpers.hpp"
 
+#include "gates_lattice_set.hpp"
+#include "io_circuit.hpp"
+#include "json.hpp"
+
+#include <fstream>
+
 #include <QGraphicsView>
 #include <QLabel>
 
@@ -15,7 +21,6 @@ class GraphView : public QGraphicsView
 
    QLabel * clabel {};
    bool cursorState {false};
-   unsigned long edges_count {1};
    QGraphicsScene * scene;
    QGraphicsLineItem * tracer {};
 
@@ -25,6 +30,7 @@ public:
    explicit GraphView(QWidget *parent= nullptr);
 
    void openGraph(const QString &);
+   void readCircuit(const QString &);
    void saveGraph(const QString &);
    void set_lattice(unsigned long, unsigned long);
 
