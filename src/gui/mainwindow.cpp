@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent)
    fileMenu= nullptr;
    graphopenfile= nullptr;
    graphsavefile= nullptr;
+   circuitMenu= nullptr;
+   graphreadcircuit= nullptr;
 
    createMenus();
 
@@ -37,6 +39,11 @@ void MainWindow::createMenus() {
    fileMenu->addAction(tr("E&xit"), this, [this](){
       QWidget::close();
    });
+
+   circuitMenu= menuBar()->addMenu(tr("&Circuit"));
+   circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
+      readCircuitDialog(graphreadcircuit);
+   });
 }
 
 void MainWindow::openGraphDialog(const QString * openfile) {
@@ -49,6 +56,19 @@ void MainWindow::openGraphDialog(const QString * openfile) {
       return ;
    else
       view->openGraph(*openfile);
+}
+
+void  MainWindow::readCircuitDialog(const QString * circuitfile) {
+   QString file_name= QFileDialog::getOpenFileName(this, tr("Read Circuit"),""
+         ,tr("Json files (*.json)"));
+
+   circuitfile= &file_name;
+
+   // handle 'cancel' at Dialog box
+   if (circuitfile->isEmpty())
+      return ;
+   else
+      view->readCircuit(*circuitfile);
 }
 
 void MainWindow::saveGraphDialog(const QString * savefile) {
