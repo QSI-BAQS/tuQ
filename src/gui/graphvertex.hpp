@@ -1,7 +1,6 @@
 #ifndef TUQ_GRAPHVERTEX_HPP
 #define TUQ_GRAPHVERTEX_HPP
 
-
 #include <QGraphicsEllipseItem>
 #include <QMenu>
 #include <QPainter>
@@ -39,7 +38,6 @@ public:
    // populated by GraphView::saveGraph, cleared after use by
    // GraphView::openGraph
    QVector<QPointF> opposite_ends {};
-
 
    void addEdge(GraphEdge * edge) { edges.push_back(edge); };
 
