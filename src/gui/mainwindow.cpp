@@ -14,8 +14,10 @@ MainWindow::MainWindow(QWidget *parent)
    fileMenu= nullptr;
    graphopenfile= nullptr;
    graphsavefile= nullptr;
+   editMenu= nullptr;
    circuitMenu= nullptr;
    graphreadcircuit= nullptr;
+   latticeMenu= nullptr;
 
    createMenus();
 
@@ -23,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
    view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
    setCentralWidget(view);
    setWindowTitle(tr("tuQ"));
-//   view->set_lattice(15,15);
 }
 
 
