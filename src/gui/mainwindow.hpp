@@ -10,11 +10,16 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 
-   QMenu * fileMenu;
+
    QMenu * circuitMenu;
+   QMenu * editMenu;
+   QMenu * fileMenu;
+   QMenu * latticeMenu;
    GraphView * view {};
 
    void createMenus();
+
+   void addLattice();
    void openGraphDialog(const QString *);
    void readCircuitDialog(const QString *);
    void saveGraphDialog(const QString *);
