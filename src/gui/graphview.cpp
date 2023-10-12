@@ -13,8 +13,8 @@
 GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
-   // Is this big enough? set_lattice runs off the page
-   scene->setSceneRect(-1500,-1500,3000,3000);
+   // *** TO DO: all rows, 67 columns accessible ***
+   scene->setSceneRect(-5000,-5000,10000,10000);
 
    setScene(scene);
    setMouseTracking(true);
@@ -181,8 +181,6 @@ void GraphView::saveGraph(const QString & wfile) {
    writefile.close();
 }
 
-
-// TO DO: gut and reconfigure to include 'Zed-ing' out superfluous qbits
 void GraphView::set_lattice(unsigned long m, unsigned long n) {
 //   circuit-to-graph layout
 //   pre-condition:
@@ -203,11 +201,18 @@ void GraphView::set_lattice(unsigned long m, unsigned long n) {
          id += 1;
       }
    }
+   // *** TO DO: set edges (rejig h_localComplementation logic?) ***
 }
 
 
 // protected:
 void GraphView::keyPressEvent(QKeyEvent * event) {
+   // Esc to cancel out of function
+   if (cursorState && event->key() == Qt::Key_Escape){
+      clabel->clear();
+      cursorState= false;
+   }
+
    if (event->key() == Qt::Key_E
    || event->key() == Qt::Key_O
    || event->key() == Qt::Key_V
@@ -283,7 +288,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      unsigned long v_count= h_items_count(4, scene);
+      unsigned long v_count= h_item_counter(4, scene);
       auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
 
       // place vertex at 'click' position
