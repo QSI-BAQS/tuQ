@@ -1,16 +1,12 @@
 #ifndef TUQ_GRAPHVIEW_HPP
 #define TUQ_GRAPHVIEW_HPP
 
-#include "graphedge.hpp"
-#include "graphvertex.hpp"
-#include "gui_helpers.hpp"
-
 #include "gates_lattice_set.hpp"
+#include "graphedge.hpp"
+#include "gui_helpers.hpp"
 #include "io_circuit.hpp"
-#include "json.hpp"
 
 #include <fstream>
-
 #include <QGraphicsView>
 #include <QLabel>
 
@@ -34,13 +30,11 @@ public:
    void saveGraph(const QString &);
    void set_lattice(unsigned long, unsigned long);
 
-
 protected:
    void keyPressEvent(QKeyEvent *) override;
    void mouseMoveEvent(QMouseEvent *) override;
    void mousePressEvent(QMouseEvent *) override;
    void mouseReleaseEvent(QMouseEvent *) override;
-
 };
 
 #endif //TUQ_GRAPHVIEW_HPP
