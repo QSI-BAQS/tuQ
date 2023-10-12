@@ -30,20 +30,41 @@ MainWindow::MainWindow(QWidget *parent)
 // private:
 void MainWindow::createMenus() {
    fileMenu= menuBar()->addMenu(tr("&File"));
+   // TO DO: *** shortcut key(s) ***
    fileMenu->addAction(tr("&Open"), this, [this](){
       openGraphDialog(graphopenfile);
    });
+   // TO DO: *** shortcut key(s) ***
    fileMenu->addAction(tr("&Save"), this, [this](){
       saveGraphDialog(graphsavefile);
    });
+   // TO DO: *** shortcut key(s) Ctrl + Q ***
    fileMenu->addAction(tr("E&xit"), this, [this](){
       QWidget::close();
    });
 
+   editMenu= menuBar()->addMenu(tr("&Edit"));
+   // TO DO: *** shortcut key(s) Ctrl + Z ***
+   editMenu->addAction(tr("&Undo"));
+
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
+   // TO DO: *** shortcut key(s) ***
    circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
       readCircuitDialog(graphreadcircuit);
    });
+
+   latticeMenu= menuBar()->addMenu(tr("&Lattice"));
+   // TO DO: *** shortcut key(s) ***
+   latticeMenu->addAction(tr("A&dd Lattice"), this, [this](){
+      addLattice();
+   });
+}
+
+// TO DO: *** QDialog (~ QDialogInput) for [rows,columns] ***
+void MainWindow::addLattice() {
+   unsigned long rows {20};
+   unsigned long columns {20};
+   view->set_lattice(rows,columns);
 }
 
 void MainWindow::openGraphDialog(const QString * openfile) {
