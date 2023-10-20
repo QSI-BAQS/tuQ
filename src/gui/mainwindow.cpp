@@ -4,6 +4,7 @@
 #include "mainwindow.hpp"
 
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMenuBar>
 
 
@@ -31,11 +32,11 @@ MainWindow::MainWindow(QWidget *parent)
 // private:
 void MainWindow::createMenus() {
    fileMenu= menuBar()->addMenu(tr("&File"));
-   // TO DO: *** shortcut key(s) ***
+   // TO DO: *** shortcut key(s) Ctrl + O ***
    fileMenu->addAction(tr("&Open"), this, [this](){
       openGraphDialog(graphopenfile);
    });
-   // TO DO: *** shortcut key(s) ***
+   // TO DO: *** shortcut key(s) Ctrl + S ***
    fileMenu->addAction(tr("&Save"), this, [this](){
       saveGraphDialog(graphsavefile);
    });
@@ -45,8 +46,10 @@ void MainWindow::createMenus() {
    });
 
    editMenu= menuBar()->addMenu(tr("&Edit"));
-   // TO DO: *** shortcut key(s) Ctrl + Z ***
+   // TO DO: *** function; shortcut key(s) Ctrl + Z ***
    editMenu->addAction(tr("&Undo"));
+   // TO DO: *** function; shortcut key(s) Ctrl + 0 ***
+   editMenu->addAction(tr("Cle&ar Screen"));
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
    // TO DO: *** shortcut key(s) ***
@@ -61,11 +64,27 @@ void MainWindow::createMenus() {
    });
 }
 
-// TO DO: *** QDialog (~ QDialogInput) for [rows,columns] ***
 void MainWindow::addLattice() {
-   unsigned long rows {20};
-   unsigned long columns {20};
-   view->set_lattice(rows,columns);
+   // create data input Dialog
+   // pre-condition: call via MainWindow menu option
+   // post-condition: populate menu function, Lattice > Add Lattice
+
+   // TO DO: why won't Slackware include title bar on dialog?
+   auto * dialog= new InputDialog("Add Lattice");
+
+   auto * rowsLineEdit= new QLineEdit(dialog);
+   rowsLineEdit->setPlaceholderText("0");
+   dialog->form->insertRow(1,"Rows", rowsLineEdit);
+
+   auto * columnsLineEdit= new QLineEdit(dialog);
+   columnsLineEdit->setPlaceholderText("0");
+   dialog->form->insertRow(2,"Columns", columnsLineEdit);
+
+   if(dialog->exec() == QDialog::Accepted){
+      unsigned long rows {rowsLineEdit->text().toULong()};
+      unsigned long columns {columnsLineEdit->text().toULong()};
+      view->set_lattice(rows,columns);
+   }
 }
 
 void MainWindow::openGraphDialog(const QString * openfile) {
