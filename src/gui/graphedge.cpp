@@ -8,7 +8,7 @@
 
 // public:
 GraphEdge::GraphEdge(GraphVertex * p1vx, GraphVertex * p2vx, QMenu * menu
-                     , QGraphicsItem *parent)
+                     , QGraphicsItem * parent)
    : QGraphicsLineItem(parent), p1v(p1vx), p2v(p2vx)
    , contextmenu_e(menu)
 {
