@@ -2,7 +2,6 @@
 #define TUQ_GRAPHVIEW_HPP
 
 #include "gates_lattice_set.hpp"
-#include "graphedge.hpp"
 #include "gui_helpers.hpp"
 #include "io_circuit.hpp"
 
@@ -25,6 +24,7 @@ class GraphView : public QGraphicsView
 public:
    explicit GraphView(QWidget *parent= nullptr);
 
+   void clear_scene() { scene->clear(); }
    void openGraph(const QString &);
    void readCircuit(const QString &);
    void saveGraph(const QString &);
