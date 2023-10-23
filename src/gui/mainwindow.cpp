@@ -4,7 +4,6 @@
 #include "mainwindow.hpp"
 
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QMenuBar>
 
 
@@ -48,8 +47,10 @@ void MainWindow::createMenus() {
    editMenu= menuBar()->addMenu(tr("&Edit"));
    // TO DO: *** function; shortcut key(s) Ctrl + Z ***
    editMenu->addAction(tr("&Undo"));
-   // TO DO: *** function; shortcut key(s) Ctrl + 0 ***
-   editMenu->addAction(tr("Cle&ar Screen"));
+   // TO DO: *** shortcut key(s) Ctrl + 0 ***
+   editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
+      view->clear_scene();
+   });
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
    // TO DO: *** shortcut key(s) ***
@@ -69,16 +70,16 @@ void MainWindow::addLattice() {
    // pre-condition: call via MainWindow menu option
    // post-condition: populate menu function, Lattice > Add Lattice
 
-   // TO DO: why won't Slackware include title bar on dialog?
+   // TO DO: vanilla Linux includes title bar on dialog?
    auto * dialog= new InputDialog("Add Lattice");
 
    auto * rowsLineEdit= new QLineEdit(dialog);
    rowsLineEdit->setPlaceholderText("0");
-   dialog->form->insertRow(1,"Rows", rowsLineEdit);
+   dialog->form->insertRow(1,"&Rows", rowsLineEdit);
 
    auto * columnsLineEdit= new QLineEdit(dialog);
    columnsLineEdit->setPlaceholderText("0");
-   dialog->form->insertRow(2,"Columns", columnsLineEdit);
+   dialog->form->insertRow(2,"&Columns", columnsLineEdit);
 
    if(dialog->exec() == QDialog::Accepted){
       unsigned long rows {rowsLineEdit->text().toULong()};
