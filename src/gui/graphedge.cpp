@@ -1,7 +1,6 @@
 //
 // specify an edge object
 //
-
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
 
