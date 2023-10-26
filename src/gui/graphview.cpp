@@ -38,6 +38,9 @@ void GraphView::openGraph(const QString & rfile) {
    QTextStream in_stream(&loadfile);
    QString vertex_data {in_stream.readLine()};
 
+   // vector, to recreate any edges
+   QVector<QPointF> opposite_ends {};   // TO DO: one vector per vertex BUT solution for create lattice??
+
    while (!vertex_data.isNull()) {
       QStringList stats= vertex_data.split(QChar(' '));
       // 1. reproduce vertex
@@ -62,7 +65,7 @@ void GraphView::openGraph(const QString & rfile) {
             if (edge_coordinates % 2 == 0){
                epos_y= stats.at(counter).toDouble();
                QPointF end_pos {epos_x,epos_y};
-               v->opposite_ends.push_back(end_pos);
+               opposite_ends.push_back(end_pos);
                epos_x= 0;
                epos_y= 0;
             }
@@ -83,14 +86,12 @@ void GraphView::openGraph(const QString & rfile) {
       if (item->type() == 4){
          auto v{qgraphicsitem_cast<GraphVertex *>(item)};
          // does v carry edges?
-         if (!v->opposite_ends.isEmpty()){
-            for (QPointF vpos : qAsConst(v->opposite_ends)) {
-               // a QPointF element of opposite_ends does not align with any
-               // QPointF of scene coordinates; swap vpos for item->pos()...
-               QPoint item_xy {(int) vpos.x(), (int) vpos.y()};
-               // then locate item @ item coordinates within scene
-               QGraphicsItem * ptr_other_v= scene->itemAt(mapToParent(item_xy)
-                     , QTransform());
+         if (!opposite_ends.isEmpty()){
+            for (QPointF vpos : opposite_ends) {
+               // swap QPointF vpos for QPoint to map to (scene) then, locate
+               // item within scene
+               QGraphicsItem * ptr_other_v= scene->itemAt(
+                     mapToParent(vpos.toPoint()), QTransform());
                auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
                // confirm the opposite end is type GraphVertex
                if (other_v->type() == 4){
@@ -101,7 +102,6 @@ void GraphView::openGraph(const QString & rfile) {
                   scene->addItem(e);
                }
             }
-            v->opposite_ends.clear();
          }
       }
    }
@@ -281,6 +281,14 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    }
    // local complementation
    else if (clabel->text() == "O"){
+      // create local complementation GraphVertex
+      QPointF lcv_pos= mapToScene(event->pos());
+      QGraphicsItem * item= scene->itemAt(lcv_pos,QTransform());
+      auto lcv= qgraphicsitem_cast<GraphVertex *>(item);
+
+      // helper function
+      h_localComplementation(*lcv, *scene);
+
       // reset cursor state
       cursorState= false;
       clabel->clear();
@@ -288,7 +296,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      unsigned long v_count= h_item_counter(4, scene);
+      unsigned long v_count= h_item_counter(4, *scene);
       auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
 
       // place vertex at 'click' position
