@@ -35,9 +35,6 @@ public:
    const QVector<GraphEdge *> * alledges {& edges};
    const unsigned long * vertexID {& vertexid};
 
-   // populated by GraphView::saveGraph
-   QVector<QPointF> opposite_ends {};
-
    void addEdge(GraphEdge * edge) { edges.push_back(edge); };
 
 protected:
