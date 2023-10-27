@@ -30,81 +30,88 @@ void GraphView::openGraph(const QString & rfile) {
    QFile loadfile(rfile);
 
    // read conditions: read-only, text
-   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
       qDebug() << " file is not open";
-      return ;
+      return;
    }
 
    QTextStream in_stream(&loadfile);
-   QString vertex_data {in_stream.readLine()};
 
-   // vector, to recreate any edges
-   QVector<QPointF> opposite_ends {};   // TO DO: one vector per vertex BUT solution for create lattice??
+   // 1. place all vertices
+   QString vertex_data{in_stream.readLine()};
 
+//   QVector<QPointF> opposite_ends {};   // solution for create lattice?
    while (!vertex_data.isNull()) {
-      QStringList stats= vertex_data.split(QChar(' '));
-      // 1. reproduce vertex
-      unsigned long vid= stats.at(0).toULong();
-      auto * v= new GraphVertex(nullptr, vid);   // TO DO: initialise, contextmenu
+      QStringList vertex_stats = vertex_data.split(QChar(' '));
+      // reproduce vertex
+      unsigned long vid = vertex_stats.at(0).toULong();
+      auto *v = new GraphVertex(nullptr, vid);   // TO DO: initialise, contextmenu
 
       // set vertex position
-      double x= stats.at(1).toDouble();
-      double y= stats.at(2).toDouble();
-      v->setPos(x,y);
+      double x = vertex_stats.at(1).toDouble();
+      double y = vertex_stats.at(2).toDouble();
+      v->setPos(x, y);
 
       // add vertex to scene
       scene->addItem(v);
 
-      // 2a. accumulate 'opposite edges'
-      if (stats.size() > 3){
+      vertex_data = in_stream.readLine();
+   }
+   // return pointer to beginning of in_stream
+   in_stream.seek(0);
+
+   // 2. place all edges
+   QString edges_data{in_stream.readLine()};
+
+   while (!edges_data.isNull()) {
+      QStringList edge_stats = edges_data.split(QChar(' '));
+      // reproduce edge
+      if (edge_stats.size() > 3) {
+         // details of 'reference' vertex
+         double x= edge_stats.at(1).toDouble();
+         double y= edge_stats.at(2).toDouble();
+         QPointF v_pos {x, y};
+         QGraphicsItem * ptr_ref_item= scene->itemAt(
+               mapToParent(v_pos.toPoint()),QTransform());
+         auto ref_v= qgraphicsitem_cast<GraphVertex *>(ptr_ref_item);
+
+         // edge_i coordinates
          double epos_x;
          double epos_y;
-         unsigned long edge_coordinates {1};
+         unsigned long edge_coordinates{1};
 
-         for (int counter= 3; counter < stats.size() ; ++counter) {
+         for (int counter= 3; counter < edge_stats.size() ; ++counter) {
             if (edge_coordinates % 2 == 0){
-               epos_y= stats.at(counter).toDouble();
+               epos_y= edge_stats.at(counter).toDouble();
                QPointF end_pos {epos_x,epos_y};
-               opposite_ends.push_back(end_pos);
-               epos_x= 0;
-               epos_y= 0;
-            }
-            else
-               epos_x= stats.at(counter).toDouble();
 
-            edge_coordinates += 1;
-         }
-      }
-      vertex_data= in_stream.readLine();
-   }
-
-   loadfile.close();
-
-   // 2b. reproduce edges
-   for (QGraphicsItem * item : scene->items()) {
-      // only type GraphVertex
-      if (item->type() == 4){
-         auto v{qgraphicsitem_cast<GraphVertex *>(item)};
-         // does v carry edges?
-         if (!opposite_ends.isEmpty()){
-            for (QPointF vpos : opposite_ends) {
-               // swap QPointF vpos for QPoint to map to (scene) then, locate
-               // item within scene
+               // map end_pos to (scene) then, locate (vertex) within scene
                QGraphicsItem * ptr_other_v= scene->itemAt(
-                     mapToParent(vpos.toPoint()), QTransform());
+                     mapToParent(end_pos.toPoint()), QTransform());
                auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
-               // confirm the opposite end is type GraphVertex
+               // other_v is type GraphVertex?
                if (other_v->type() == 4){
-                  GraphEdge * e= new GraphEdge(v,other_v, nullptr);
-                  v->addEdge(e);
+                  GraphEdge * e= new GraphEdge(ref_v, other_v, nullptr);
+                  ref_v->addEdge(e);
                   other_v->addEdge(e);
 
                   scene->addItem(e);
                }
+
+               epos_x= 0;
+               epos_y= 0;
             }
+            else
+               epos_x= edge_stats.at(counter).toDouble();
+
+            edge_coordinates += 1;
          }
       }
+
+      edges_data = in_stream.readLine();
    }
+
+   loadfile.close();
 }
 
 // read a quantum circuit file, format .json (schemas: 'native', which is
