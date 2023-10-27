@@ -23,6 +23,7 @@ public:
 };
 
 
+void h_deleteEdge(GraphEdge *, QGraphicsScene &);
 unsigned long h_item_counter(int, const QGraphicsScene &);
 void h_localComplementation(GraphVertex &, QGraphicsScene &);
 
