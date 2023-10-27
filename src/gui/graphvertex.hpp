@@ -36,6 +36,7 @@ public:
    const unsigned long * vertexID {& vertexid};
 
    void addEdge(GraphEdge * edge) { edges.push_back(edge); };
+   void removeEdge(GraphEdge * edge) { edges.removeAll(edge); };
 
 protected:
 //   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
