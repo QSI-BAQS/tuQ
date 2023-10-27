@@ -40,7 +40,6 @@ void GraphView::openGraph(const QString & rfile) {
    // 1. place all vertices
    QString vertex_data{in_stream.readLine()};
 
-//   QVector<QPointF> opposite_ends {};   // solution for create lattice?
    while (!vertex_data.isNull()) {
       QStringList vertex_stats = vertex_data.split(QChar(' '));
       // reproduce vertex
@@ -288,7 +287,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    }
    // local complementation
    else if (clabel->text() == "O"){
-      // create local complementation GraphVertex
+      // specify in-focus vertex
       QPointF lcv_pos= mapToScene(event->pos());
       QGraphicsItem * item= scene->itemAt(lcv_pos,QTransform());
       auto lcv= qgraphicsitem_cast<GraphVertex *>(item);
