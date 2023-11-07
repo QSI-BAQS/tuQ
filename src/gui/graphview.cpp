@@ -90,7 +90,7 @@ void GraphView::openGraph(const QString & rfile) {
                auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
                // other_v is type GraphVertex?
                if (other_v->type() == 4){
-                  GraphEdge * e= new GraphEdge(ref_v, other_v, nullptr);
+                  GraphEdge * e= new GraphEdge(ref_v, other_v, nullptr);   // TO DO: initialise, contextmenu
                   ref_v->addEdge(e);
                   other_v->addEdge(e);
 
