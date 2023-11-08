@@ -22,7 +22,7 @@ InputDialog::InputDialog(QString menu_function, QWidget * parent)
 }
 
 
-void h_deleteEdge(GraphEdge * edge, QGraphicsScene * scene) {
+void h_deleteEdge(GraphEdge * edge, QGraphicsScene & scene) {
    // delete GraphEdge
    // pre-condition: target object is type, GraphEdge
    // post-condition: target GraphEdge is removed from scene, any formerly
@@ -33,7 +33,7 @@ void h_deleteEdge(GraphEdge * edge, QGraphicsScene * scene) {
    edge->p2vertex->removeEdge(edge);
 
    // back out edge from scene
-   scene->removeItem(edge);
+   scene.removeItem(edge);
 }
 
 unsigned long h_item_counter(int item_type, const QGraphicsScene & scene) {
@@ -60,77 +60,92 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
 
    // ABORT LC operation: vertex lcv has <= 1 edge
    if (lcv.alledges->count() < 2)
-      return ;
+      return;
 
    QPointF lcv_pos {lcv.pos()};
 
    // populate vector of lcv neighbours
    QVector<GraphVertex *> lcNeighbours;
    for (const GraphEdge * e : *lcv.alledges) {
-         if (e->p1vertex->pos() == lcv_pos)
-            lcNeighbours.push_back(e->p2vertex);
-         else
-            lcNeighbours.push_back(e->p1vertex);
+      GraphVertex * marker;
+      if (e->p1vertex->pos() == lcv_pos)
+         marker= e->p2vertex;
+      else
+         marker= e->p1vertex;
+
+      if (!lcNeighbours.contains(marker))
+         lcNeighbours.push_back(marker);
    }
 
-   // Vector: GraphEdge for DELETE operation
-   QVector<GraphEdge *> d_edges {};
+   // accumulate unique sub-sequences of lcv neighbours
+   struct Pair_Neighbours {
+      GraphVertex * vertex_1;
+      GraphVertex * vertex_2;
 
-   for (GraphVertex * v : lcNeighbours) {
-      for (GraphEdge * e : *v->alledges) {
-         QPointF p1v_pos {e->p1vertex->pos()};
-         QPointF p2v_pos {e->p2vertex->pos()};
-         // edge is not connected to lcv
-         if (p1v_pos != lcv_pos && p2v_pos != lcv_pos){
-            if (d_edges.isEmpty())
-               d_edges.push_back(e);
-            else {
-               // d_edges contains neither edge nor its inverse
-               for (GraphEdge * unique : d_edges) {
-                  QPointF p1v_unique {unique->p1vertex->pos()};
-                  QPointF p2v_unique {unique->p2vertex->pos()};
+      bool operator==(const Pair_Neighbours &rhs) const {
+         return (vertex_1 == rhs.vertex_1 && vertex_2 == rhs.vertex_2);
+      }
+   };
+   QVector<Pair_Neighbours> neighbour_subsequences {};
 
-                  if (p1v_unique != p1v_pos && p1v_unique != p2v_pos &&
-                  p2v_unique != p2v_pos && p2v_unique != p1v_pos
-                  )
-                     d_edges.push_back(e);
-               }
+   int neighbour_idx {0};
+   int neighbours_count {lcNeighbours.count()};
+
+   while (neighbour_idx < neighbours_count) {
+      for (int i= neighbour_idx + 1; i < neighbours_count; ++i) {
+         // sub-sequence of neighbours
+         Pair_Neighbours edge_ref {lcNeighbours[neighbour_idx]
+                                   , lcNeighbours[i]};
+         // accumulate sub-sequences
+         neighbour_subsequences.push_back(edge_ref);
+      }
+      neighbour_idx += 1;
+   }
+
+   QVector<Pair_Neighbours> add_edges {};
+   QVector<GraphEdge *> delete_edges {};
+
+   for (Pair_Neighbours v_pair : neighbour_subsequences) {
+      bool p_add_edge {true};
+      // operation: DELETE edge, at least one of the vertices of v_pair must
+      // have more than one edge; an edge count of one is the edge with lcv
+      if (v_pair.vertex_1->alledges->count() > 1){
+         for (GraphEdge * edge_match : *v_pair.vertex_1->alledges) {
+            if ((edge_match->p1vertex->pos() == v_pair.vertex_2->pos() ||
+            edge_match->p2vertex->pos() == v_pair.vertex_2->pos())
+            && !delete_edges.contains(edge_match)){
+               delete_edges.push_back(edge_match);
+               p_add_edge= false;
+
+               // lazy evaluation of matching logic vis-a-vis vertex_2
+               continue ;
             }
          }
       }
-   }
-
-   // Vector: paired neighbour vertices for (edge) ADD operation
-   struct addEdge {
-      GraphVertex * A;
-      GraphVertex * B;
-   };
-   QVector<addEdge> a_vertices {};
-
-   QPointF vertex_1_pos {};
-   QPointF vertex_2_pos {};
-   int neighbour{1};
-
-   for (int i= 0; i < lcNeighbours.count() ; ++i) {
-      if (neighbour % 2 == 0){
-         vertex_2_pos= lcNeighbours[i]->pos();
-
-//         if (lcNeighbours[i-1]->alledges->contains())
-
+      else if (v_pair.vertex_2->alledges->count() > 1){
+         for (GraphEdge * edge_match : *v_pair.vertex_2->alledges) {
+            if ((edge_match->p1vertex->pos() == v_pair.vertex_1->pos() ||
+                 edge_match->p2vertex->pos() == v_pair.vertex_1->pos())
+                && !delete_edges.contains(edge_match)){
+               delete_edges.push_back(edge_match);
+               p_add_edge= false;
+            }
+         }
       }
-      else
-         vertex_1_pos= lcNeighbours[i]->pos();
 
-      neighbour += 1;
+      // operation: ADD edge
+      if (p_add_edge && !add_edges.contains(v_pair))
+         add_edges.push_back(v_pair);
    }
-
-/*
-   // delete edge(s)
-   for (auto delEdge : d_edges) {
-      h_deleteEdge(delEdge,scene);
+   // ADD edge(s)
+   for (Pair_Neighbours newEdge : add_edges) {
+      auto * e= new GraphEdge(newEdge.vertex_1, newEdge.vertex_2, nullptr);   // TO DO: initialise, contextmenu
+      newEdge.vertex_1->addEdge(e);
+      newEdge.vertex_2->addEdge(e);
+      scene.addItem(e);
    }
-   // add edge(s)
-   for (auto newEdge : a_vertices) {
-      scene.addItem(newEdge);
-   }*/
+   // DELETE edge(s)
+   for (auto delEdge: delete_edges) {
+      h_deleteEdge(delEdge, scene);
+   }
 }
