@@ -23,7 +23,7 @@ public:
    void resetEdgePosition();
 
 protected:
-
+   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
 };
 
 #endif //TUQ_GRAPHEDGE_HPP

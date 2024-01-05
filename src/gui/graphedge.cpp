@@ -34,3 +34,9 @@ void GraphEdge::resetEdgePosition() {
 
 
 // protected:
+// edge menu options at click
+void GraphEdge::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
+   // all functions @ GraphView::createElementMenus
+   setSelected(true);
+   contextmenu_e->exec(event->screenPos());
+}
