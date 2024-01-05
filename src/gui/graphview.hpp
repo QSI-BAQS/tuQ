@@ -16,9 +16,12 @@ class GraphView : public QGraphicsView
 
    QLabel * clabel {};
    bool cursorState {false};
+   QMenu * edgemenu {};
    QGraphicsScene * scene;
    QGraphicsLineItem * tracer {};
+   QMenu * vertexmenu {};
 
+   void createElementMenus(QGraphicsScene *);
    void setCursorLabel(int);
 
 public:
