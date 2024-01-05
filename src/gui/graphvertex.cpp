@@ -24,12 +24,12 @@ GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
 
 // protected:
 // vertex menu options at click
-/*void GraphVertex::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
-   scene()->clearSelection();
+void GraphVertex::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
+   // all functions @ GraphView::createElementMenus
    setSelected(true);
-//   contextmenu_v->exec(event->scenePos());
+   contextmenu_v->exec(event->screenPos());
 }
-*/
+
 // moving a vertex moves any attached edge with it
 QVariant GraphVertex::itemChange(GraphicsItemChange change
                                  , const QVariant & value) {
@@ -56,5 +56,4 @@ void GraphVertex::paint(QPainter * painter
    painter->setPen(vertexidpen);
    painter->drawText(vertexboundaryrect, Qt::AlignCenter, QString::number(vertexid));
 }
-
 

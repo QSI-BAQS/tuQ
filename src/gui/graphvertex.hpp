@@ -2,6 +2,7 @@
 #define TUQ_GRAPHVERTEX_HPP
 
 #include <QGraphicsEllipseItem>
+#include <QGraphicsSceneContextMenuEvent>
 #include <QMenu>
 #include <QPainter>
 
@@ -39,7 +40,7 @@ public:
    void removeEdge(GraphEdge * edge) { edges.removeAll(edge); };
 
 protected:
-//   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
+   void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
    QVariant itemChange(GraphicsItemChange, const QVariant &) override;
    void paint(QPainter *, const QStyleOptionGraphicsItem *
               , QWidget *) override;
