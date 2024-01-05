@@ -22,6 +22,8 @@ GraphView::GraphView(QWidget *parent)
    clabel= new QLabel;
    clabel->setWindowFlag(Qt::ToolTip);
 //   clabel->setWindowOpacity(0);
+
+   createElementMenus(scene);
 }
 
 
@@ -44,7 +46,7 @@ void GraphView::openGraph(const QString & rfile) {
       QStringList vertex_stats = vertex_data.split(QChar(' '));
       // reproduce vertex
       unsigned long vid = vertex_stats.at(0).toULong();
-      auto *v = new GraphVertex(nullptr, vid);   // TO DO: initialise, contextmenu
+      auto *v = new GraphVertex(vertexmenu, vid);
 
       // set vertex position
       double x = vertex_stats.at(1).toDouble();
@@ -90,7 +92,7 @@ void GraphView::openGraph(const QString & rfile) {
                auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
                // other_v is type GraphVertex?
                if (other_v->type() == 4){
-                  GraphEdge * e= new GraphEdge(ref_v, other_v, nullptr);   // TO DO: initialise, contextmenu
+                  auto * e= new GraphEdge(ref_v, other_v, edgemenu);
                   ref_v->addEdge(e);
                   other_v->addEdge(e);
 
@@ -169,7 +171,7 @@ void GraphView::saveGraph(const QString & wfile) {
          write << *v->vertexID << " "
          // vertex pos
          << v->pos().x() << " " << v->pos().y();
-         // edge coordinates (unique: no 'flips')
+         // edge coordinates (unique, i.e. no 'flips')
          for (const GraphEdge * e: *v->alledges) {
             if (e->p1vertex
             && e->p1vertex->x() != v->pos().x()
@@ -200,7 +202,7 @@ void GraphView::set_lattice(unsigned long m, unsigned long n) {
 
    for (int i= 0; i < m; ++i) {
       for (int j= 0; j < n; ++j) {
-         auto vertex= new GraphVertex(nullptr,id);   // TO DO: initialise, contextmenu
+         auto vertex= new GraphVertex(vertexmenu,id);
          vertex->setPos(j*xinc,i*yinc);
          scene->addItem(vertex);
 
@@ -260,8 +262,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphEdge, pt. 1
    if (clabel->text() == "E"){
       // collect the p1 vertex at the cursor hotspot at 'click'
-      QPoint vertex_at_view= event->pos();
-      QPointF vertex_at_scene= mapToScene(vertex_at_view);
+      QPointF vertex_at_scene= mapToScene(event->pos());
       QGraphicsItem * edge_origin= scene->itemAt(vertex_at_scene,QTransform());
 
       // prevent runtime exception from no vertex at the cursor hotspot upon
@@ -303,7 +304,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    else if (clabel->text() == "V"){
       // instantiate the vertex
       unsigned long v_count= h_item_counter(4, *scene);
-      auto * v= new GraphVertex(nullptr, v_count);   // TO DO: initialise, contextmenu
+      auto * v= new GraphVertex(vertexmenu, v_count);
 
       // place vertex at 'click' position
       QPointF pos_xy= mapToScene(event->x()-15, event->y());
@@ -323,12 +324,36 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    }
    // measurement, y-basis
    else if (clabel->text() == "Y"){
+      // select vertex for Y operation
+      QPointF vertex_at_scene= mapToScene(event->pos());
+      QGraphicsItem * y_item= scene->itemAt(vertex_at_scene,QTransform());
+      auto * y_vertex= qgraphicsitem_cast<GraphVertex *>(y_item);
+
+      // prevent the exception caused by no object at cursor hotspot upon
+      // 'click'
+      if (y_vertex != nullptr){
+         if (y_vertex->alledges->isEmpty())
+            h_deleteVertex(*y_vertex, *scene);
+         else if (!y_vertex->alledges->isEmpty()){
+            h_localComplementation(*y_vertex, *scene);
+            h_deleteVertex(*y_vertex, *scene);
+         }
+      }
+
       // reset cursor state
       cursorState= false;
       clabel->clear();
    }
    // measurement, z-basis
    else if (clabel->text() == "Z"){
+      // select vertex for Z operation
+      QPointF vertex_at_scene= mapToScene(event->pos());
+      QGraphicsItem * z_item= scene->itemAt(vertex_at_scene,QTransform());
+      auto * z_vertex= qgraphicsitem_cast<GraphVertex *>(z_item);
+
+      if (z_vertex != nullptr)
+         h_deleteVertex(*z_vertex,*scene);
+
       // reset cursor state
       cursorState= false;
       clabel->clear();
@@ -363,16 +388,16 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
       && p2items.first()->type() == GraphVertex::Type
       && p1items.first() != p2items.first()){
          // pointer -> the GraphVertex at p1 coordinates
-         GraphVertex * p1v= qgraphicsitem_cast<GraphVertex *>(p1items.first());
+         auto * p1v= qgraphicsitem_cast<GraphVertex *>(p1items.first());
          // restore the 'movable' property of p1v, which was suspended at
          // mousePressEvent
          p1v->setFlag(QGraphicsItem::ItemIsMovable, true);
          // drop focus from p1v
          p1v->setSelected(false);
          // pointer -> the GraphVertex at p2 coordinates
-         GraphVertex * p2v= qgraphicsitem_cast<GraphVertex *>(p2items.first());
+         auto * p2v= qgraphicsitem_cast<GraphVertex *>(p2items.first());
          // use p1v and p2v as constructors to instantiate the edge
-         auto * e= new GraphEdge(p1v, p2v, nullptr);   // TO DO: initialise, contextmenu
+         auto * e= new GraphEdge(p1v, p2v, edgemenu);
 
          // add the edge to (QVector) 'edges' of vertices at both p1 and p2
          // coordinates
@@ -392,6 +417,37 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
 
 
 // private:
+void GraphView::createElementMenus(QGraphicsScene * scene) {
+   // right-click menus for graph elements, (Graph)edge and (Graph)vertex
+   edgemenu= new QMenu("edge menu");
+   edgemenu->addAction(tr("&Delete"), this, [&, scene](){
+      // collect only the edge at the cursor hotspot, upon 'click'
+      QList<QGraphicsItem *> del_edge= scene->selectedItems();
+      // either head of del_edge is type GraphEdge or abort
+      if (del_edge.isEmpty() || del_edge.first()->type() != GraphEdge::Type)
+         return ;
+
+      // delete edge
+      auto * edge= qgraphicsitem_cast<GraphEdge *>(del_edge.first());
+      h_deleteEdge(edge, *scene);
+   });
+//   edgemenu->addAction(tr("-- place 2 --"));
+
+   vertexmenu= new QMenu("vertex menu");
+   vertexmenu->addAction(tr("&Delete"), this, [&, scene](){
+      // collect only the vertex at the cursor hotspot, upon 'click'
+      QList<QGraphicsItem *> del_vertex= scene->selectedItems();
+      // either head of del_vertex is type GraphVertex or abort
+      if (del_vertex.isEmpty() || del_vertex.first()->type() != GraphVertex::Type)
+         return ;
+
+      // delete vertex
+      auto * vertex= qgraphicsitem_cast<GraphVertex *>(del_vertex.first());
+      h_deleteVertex(*vertex, *scene);
+   });
+//   vertexmenu->addAction(tr("-- place 2 --"));
+}
+
 void GraphView::setCursorLabel(int key) {
    // create E/O/V/X/Y/Z label for cursor
    // pre-condition: cursorState == true
