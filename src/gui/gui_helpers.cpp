@@ -23,10 +23,9 @@ InputDialog::InputDialog(QString menu_function, QWidget * parent)
 
 
 void h_deleteEdge(GraphEdge * edge, QGraphicsScene & scene) {
-   // delete GraphEdge
+   // delete GraphEdge from scene
    // pre-condition: target object is type, GraphEdge
-   // post-condition: target GraphEdge is removed from scene, any formerly
-   //   connected (Graph)vertices are unaffected
+   // post-condition: any formerly connected (Graph)vertices are unaffected
 
    // remove the edge from (vector) alledges of both vertices
    edge->p1vertex->removeEdge(edge);
@@ -34,6 +33,25 @@ void h_deleteEdge(GraphEdge * edge, QGraphicsScene & scene) {
 
    // back out edge from scene
    scene.removeItem(edge);
+}
+
+void h_deleteVertex(GraphVertex & vertex, QGraphicsScene & scene) {
+   // delete GraphVertex from scene
+   // pre-condition: target object is type, GraphVertex
+   // post-condition: all connected (Graph)edges are removed
+
+   // 'alledges' is a copy of container, edges, while removeEdge() executes
+   //  against that container...
+   QVector<GraphEdge *> copy_edges= *vertex.alledges;
+
+   // remove any and all (Graph)edges connected to vertex
+   for (GraphEdge * e : copy_edges) {
+      h_deleteEdge(e,scene);
+   }
+   // back out vertex from scene
+   scene.removeItem(&vertex);
+
+   // placeholder: reset IDs?
 }
 
 unsigned long h_item_counter(int item_type, const QGraphicsScene & scene) {
@@ -86,7 +104,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
          return (vertex_1 == rhs.vertex_1 && vertex_2 == rhs.vertex_2);
       }
    };
-   QVector<Pair_Neighbours> neighbour_subsequences {};
+   QVector<Pair_Neighbours> neighbour_sub_sequences {};
 
    int neighbour_idx {0};
    int neighbours_count {lcNeighbours.count()};
@@ -97,7 +115,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
          Pair_Neighbours edge_ref {lcNeighbours[neighbour_idx]
                                    , lcNeighbours[i]};
          // accumulate sub-sequences
-         neighbour_subsequences.push_back(edge_ref);
+         neighbour_sub_sequences.push_back(edge_ref);
       }
       neighbour_idx += 1;
    }
@@ -105,7 +123,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
    QVector<Pair_Neighbours> add_edges {};
    QVector<GraphEdge *> delete_edges {};
 
-   for (Pair_Neighbours v_pair : neighbour_subsequences) {
+   for (Pair_Neighbours v_pair : neighbour_sub_sequences) {
       bool p_add_edge {true};
       // operation: DELETE edge, at least one of the vertices of v_pair must
       // have more than one edge; an edge count of one is the edge with lcv
@@ -145,7 +163,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
       scene.addItem(e);
    }
    // DELETE edge(s)
-   for (auto delEdge: delete_edges) {
+   for (GraphEdge * delEdge: delete_edges) {
       h_deleteEdge(delEdge, scene);
    }
 }
