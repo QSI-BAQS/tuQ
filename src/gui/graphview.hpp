@@ -20,6 +20,8 @@ class GraphView : public QGraphicsView
    QGraphicsScene * scene;
    QGraphicsLineItem * tracer {};
    QMenu * vertexmenu {};
+   GraphVertex * vertex1_X {};
+   QVector<GraphVertex *> vertex1_X_neighbours {};
 
    void createElementMenus(QGraphicsScene *);
    void setCursorLabel(int);

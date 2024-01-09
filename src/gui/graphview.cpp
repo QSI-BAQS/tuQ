@@ -257,7 +257,15 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // LEFT click events
    if (event->button() != Qt::LeftButton)
       return ;
-   // TO DO, LPM X abort insert
+   // ABORT X measurement: user has not completed the X measurement in
+   // contiguous steps (see 'part 2 -> measurement, x-basis', below)
+   if (clabel->text() != "X" && !vertex1_X_neighbours.isEmpty()){
+      for (GraphVertex * v : vertex1_X_neighbours) {
+         v->resetVertexColour(Qt::black);
+      }
+      vertex1_X_neighbours.clear();
+      vertex1_X= nullptr;
+   }
 
    // instantiate: GraphEdge, pt. 1
    if (clabel->text() == "E"){
@@ -294,7 +302,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       auto lcv= qgraphicsitem_cast<GraphVertex *>(item);
 
       // helper function
-      h_localComplementation(*lcv, *scene);
+      h_localComplementation(*lcv, *scene, edgemenu);
 
       // reset cursor state
       cursorState= false;
@@ -316,17 +324,99 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       cursorState= false;
       clabel->clear();
    }
-   // measurement, x-basis
-   else if (clabel->text() == "X"){
+   // part 1 -> measurement, x-basis
+   else if (clabel->text() == "X" && vertex1_X_neighbours.isEmpty()){
+      // select first vertex of X measurement
+      QPointF x_vertex1_pos= mapToScene(event->pos());
+      QGraphicsItem * item= scene->itemAt(x_vertex1_pos, QTransform());
+      // 'item' is type GraphVertex or abort
+      if (item == nullptr || item->type() != GraphVertex::Type) {
+         cursorState= false;
+         clabel->clear();
+         return ;
+      }
+      vertex1_X = qgraphicsitem_cast<GraphVertex *>(item);
+
+      // ABORT: first vertex must have >= 1 edge for local complementation
+      if (vertex1_X->alledges->isEmpty()) {
+         cursorState= false;
+         clabel->clear();
+         return ;
+      }
+
+      // populate neighbours of first vertex
+      for (GraphEdge *e : *vertex1_X->alledges) {
+         // obtain the address of underlying GraphVertex
+         GraphVertex *address_of_p1vertex= e->p1vertex;
+         // test whether pointed-at-objects are equivalent by comparing their
+         // addresses
+         if (address_of_p1vertex != vertex1_X)
+            vertex1_X_neighbours.push_back(e->p1vertex);
+         else
+            vertex1_X_neighbours.push_back(e->p2vertex);
+      }
+
+      // reformat each of first vertex's neighbours as a prompt to the user to
+      // select the special neighbour vertex
+      for (GraphVertex *neighbour : vertex1_X_neighbours) {
+         neighbour->resetVertexColour(QColor(0, 255, 0), 4, QColor(173, 255, 47));
+      }
+   }
+   // part 2 -> measurement, x-basis
+   else if (clabel->text() == "X" && !vertex1_X_neighbours.isEmpty()){
+      // select special neighbour vertex of X measurement
+      QPointF x_vertex2_pos= mapToScene(event->pos());
+      QGraphicsItem * item= scene->itemAt(x_vertex2_pos, QTransform());
+      // 'item' is type GraphVertex or abort
+      if (item == nullptr || item->type() != GraphVertex::Type){
+         for (GraphVertex * v : vertex1_X_neighbours) {
+            v->resetVertexColour(Qt::black);
+         }
+         vertex1_X_neighbours.clear();
+         vertex1_X= nullptr;
+
+         cursorState= false;
+         clabel->clear();
+         return ;
+      }
+      auto vertex2_X= qgraphicsitem_cast<GraphVertex *>(item);
+
+      // ABORT: special neighbour vertex must have >= 1 edge for local
+      // complementation
+      if (vertex2_X->alledges->isEmpty()){
+         cursorState= false;
+         clabel->clear();
+         return ;
+      }
+
+      // first local complementation on special neighbour vertex
+      h_localComplementation(*vertex2_X, *scene, edgemenu);
+
+      // restore each of first vertex's neighbours to default colour scheme
+      for (GraphVertex * v : vertex1_X_neighbours) {
+         v->resetVertexColour(Qt::black);
+      }
+
+      // Y measurement of first vertex
+      h_localComplementation(*vertex1_X, *scene, edgemenu);
+      h_deleteVertex(*vertex1_X, *scene);
+
+      // second local complementation on special neighbour vertex
+      h_localComplementation(*vertex2_X, *scene, edgemenu);
+
+      // clean up
+      vertex1_X_neighbours.clear();
+      vertex1_X= nullptr;
+
       // reset cursor state
       cursorState= false;
       clabel->clear();
    }
    // measurement, y-basis
    else if (clabel->text() == "Y"){
-      // select vertex for Y operation
+      // select vertex of Y measurement
       QPointF vertex_at_scene= mapToScene(event->pos());
-      QGraphicsItem * y_item= scene->itemAt(vertex_at_scene,QTransform());
+      QGraphicsItem * y_item= scene->itemAt(vertex_at_scene, QTransform());
       auto * y_vertex= qgraphicsitem_cast<GraphVertex *>(y_item);
 
       // prevent the exception caused by no object at cursor hotspot upon
@@ -335,7 +425,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
          if (y_vertex->alledges->isEmpty())
             h_deleteVertex(*y_vertex, *scene);
          else if (!y_vertex->alledges->isEmpty()){
-            h_localComplementation(*y_vertex, *scene);
+            h_localComplementation(*y_vertex, *scene, edgemenu);
             h_deleteVertex(*y_vertex, *scene);
          }
       }
@@ -346,9 +436,9 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    }
    // measurement, z-basis
    else if (clabel->text() == "Z"){
-      // select vertex for Z operation
+      // select vertex of Z measurement
       QPointF vertex_at_scene= mapToScene(event->pos());
-      QGraphicsItem * z_item= scene->itemAt(vertex_at_scene,QTransform());
+      QGraphicsItem * z_item= scene->itemAt(vertex_at_scene, QTransform());
       auto * z_vertex= qgraphicsitem_cast<GraphVertex *>(z_item);
 
       if (z_vertex != nullptr)
