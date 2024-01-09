@@ -21,6 +21,15 @@ GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
    setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 }
 
+void GraphVertex::resetVertexColour(QColor colour, qreal pen, QColor fill) {
+   vertexcircumferencepen= QPen(colour, pen);
+   vertexfill= fill;
+   setPen(vertexcircumferencepen);
+   setBrush(fill);
+
+   update(vertexboundaryrect);
+}
+
 
 // protected:
 // vertex menu options at click

@@ -38,6 +38,7 @@ public:
 
    void addEdge(GraphEdge * edge) { edges.push_back(edge); };
    void removeEdge(GraphEdge * edge) { edges.removeAll(edge); };
+   void resetVertexColour(QColor, qreal= 2, QColor= QColor(245,245,245));
 
 protected:
    void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;
