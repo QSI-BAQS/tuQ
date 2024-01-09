@@ -68,7 +68,8 @@ unsigned long h_item_counter(int item_type, const QGraphicsScene & scene) {
    return counter;
 }
 
-void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
+void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene
+                            , QMenu * const menu) {
    // local complementation (LC) applied to in-focus vertex, lcv: all vertices
    // of lcv's neighbourhood not joined by a (graph)edge to be joined by an
    // edge; all vertices of lcv's neighbourhood joined by a (graph)edge to lose
@@ -157,7 +158,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene) {
    }
    // ADD edge(s)
    for (Pair_Neighbours newEdge : add_edges) {
-      auto * e= new GraphEdge(newEdge.vertex_1, newEdge.vertex_2, nullptr);   // TO DO: initialise, contextmenu
+      auto * e= new GraphEdge(newEdge.vertex_1, newEdge.vertex_2, menu);
       newEdge.vertex_1->addEdge(e);
       newEdge.vertex_2->addEdge(e);
       scene.addItem(e);
