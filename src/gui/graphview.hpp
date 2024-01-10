@@ -33,7 +33,7 @@ public:
    void openGraph(const QString &);
    void readCircuit(const QString &);
    void saveGraph(const QString &);
-   void set_lattice(unsigned long, unsigned long);
+   void setLattice(unsigned long, unsigned long);
 
 protected:
    void keyPressEvent(QKeyEvent *) override;
