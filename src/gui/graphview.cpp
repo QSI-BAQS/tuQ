@@ -14,6 +14,7 @@ GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
    // *** TO DO: all rows, 67 columns accessible ***
+   // '... one unit on the scene is represented by one pixel on the screen.'
    scene->setSceneRect(-5000,-5000,10000,10000);
 
    setScene(scene);
@@ -93,8 +94,8 @@ void GraphView::openGraph(const QString & rfile) {
                // other_v is type GraphVertex?
                if (other_v->type() == 4){
                   auto * e= new GraphEdge(ref_v, other_v, edgemenu);
-                  ref_v->addEdge(e);
-                  other_v->addEdge(e);
+                  ref_v->add_edge(e);
+                  other_v->add_edge(e);
 
                   scene->addItem(e);
                }
@@ -146,7 +147,7 @@ void GraphView::readCircuit(const QString & cjson) {
       unsigned long cluster_state_columns= cols_n(gate_by_address
             , etch_circuit);
 
-      set_lattice(cluster_state_rows, cluster_state_columns);
+      setLattice(cluster_state_rows, cluster_state_columns);
    }
    else
       qDebug() << "That file is not opening";
@@ -189,16 +190,16 @@ void GraphView::saveGraph(const QString & wfile) {
    writefile.close();
 }
 
-void GraphView::set_lattice(unsigned long m, unsigned long n) {
+void GraphView::setLattice(unsigned long m, unsigned long n) {
 //   circuit-to-graph layout
 //   pre-condition:
 //      - json input is well-formed,
 //      - composition and layout of gates passes input checks.
 //   post-condition: the count of measurement patterns, including edges,
-//      strictly reconciles with the count of (input) circuit gates
+//      reconciles with the count of (input) circuit gates
    unsigned long id {1};
-   qreal xinc {75};
-   qreal yinc {75};
+   qreal xinc {70};
+   qreal yinc {70};
 
    for (int i= 0; i < m; ++i) {
       for (int j= 0; j < n; ++j) {
@@ -210,6 +211,7 @@ void GraphView::set_lattice(unsigned long m, unsigned long n) {
       }
    }
    // *** TO DO: set edges (rejig h_localComplementation logic?) ***
+   // auto * e= new GraphEdge(p1v, p2v, edgemenu);
 }
 
 
@@ -257,6 +259,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // LEFT click events
    if (event->button() != Qt::LeftButton)
       return ;
+
    // ABORT X measurement: user has not completed the X measurement in
    // contiguous steps (see 'part 2 -> measurement, x-basis', below)
    if (clabel->text() != "X" && !vertex1_X_neighbours.isEmpty()){
@@ -311,7 +314,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    // instantiate: GraphVertex
    else if (clabel->text() == "V"){
       // instantiate the vertex
-      unsigned long v_count= h_item_counter(4, *scene);
+      unsigned long v_count= h_itemCounter(4, *scene);
       auto * v= new GraphVertex(vertexmenu, v_count);
 
       // place vertex at 'click' position
@@ -330,7 +333,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       QPointF x_vertex1_pos= mapToScene(event->pos());
       QGraphicsItem * item= scene->itemAt(x_vertex1_pos, QTransform());
       // 'item' is type GraphVertex or abort
-      if (item == nullptr || item->type() != GraphVertex::Type) {
+      if (item == nullptr || item->type() != GraphVertex::Type){
          cursorState= false;
          clabel->clear();
          return ;
@@ -338,7 +341,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       vertex1_X = qgraphicsitem_cast<GraphVertex *>(item);
 
       // ABORT: first vertex must have >= 1 edge for local complementation
-      if (vertex1_X->alledges->isEmpty()) {
+      if (vertex1_X->alledges->isEmpty()){
          cursorState= false;
          clabel->clear();
          return ;
@@ -491,8 +494,8 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
 
          // add the edge to (QVector) 'edges' of vertices at both p1 and p2
          // coordinates
-         p1v->addEdge(e);
-         p2v->addEdge(e);
+         p1v->add_edge(e);
+         p2v->add_edge(e);
 
          scene->addItem(e);
 
@@ -507,33 +510,33 @@ void GraphView::mouseReleaseEvent(QMouseEvent * event) {
 
 
 // private:
-void GraphView::createElementMenus(QGraphicsScene * scene) {
+void GraphView::createElementMenus(QGraphicsScene * graph_scene) {
    // right-click menus for graph elements, (Graph)edge and (Graph)vertex
    edgemenu= new QMenu("edge menu");
-   edgemenu->addAction(tr("&Delete"), this, [&, scene](){
+   edgemenu->addAction(tr("&Delete"), this, [&, graph_scene](){
       // collect only the edge at the cursor hotspot, upon 'click'
-      QList<QGraphicsItem *> del_edge= scene->selectedItems();
+      QList<QGraphicsItem *> del_edge= graph_scene->selectedItems();
       // either head of del_edge is type GraphEdge or abort
       if (del_edge.isEmpty() || del_edge.first()->type() != GraphEdge::Type)
          return ;
 
       // delete edge
       auto * edge= qgraphicsitem_cast<GraphEdge *>(del_edge.first());
-      h_deleteEdge(edge, *scene);
+      h_deleteEdge(edge, *graph_scene);
    });
 //   edgemenu->addAction(tr("-- place 2 --"));
 
    vertexmenu= new QMenu("vertex menu");
-   vertexmenu->addAction(tr("&Delete"), this, [&, scene](){
+   vertexmenu->addAction(tr("&Delete"), this, [&, graph_scene](){
       // collect only the vertex at the cursor hotspot, upon 'click'
-      QList<QGraphicsItem *> del_vertex= scene->selectedItems();
+      QList<QGraphicsItem *> del_vertex= graph_scene->selectedItems();
       // either head of del_vertex is type GraphVertex or abort
       if (del_vertex.isEmpty() || del_vertex.first()->type() != GraphVertex::Type)
          return ;
 
       // delete vertex
       auto * vertex= qgraphicsitem_cast<GraphVertex *>(del_vertex.first());
-      h_deleteVertex(*vertex, *scene);
+      h_deleteVertex(*vertex, *graph_scene);
    });
 //   vertexmenu->addAction(tr("-- place 2 --"));
 }
