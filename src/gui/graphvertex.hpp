@@ -36,8 +36,8 @@ public:
    const QVector<GraphEdge *> * alledges {& edges};
    const unsigned long * vertexID {& vertexid};
 
-   void addEdge(GraphEdge * edge) { edges.push_back(edge); };
-   void removeEdge(GraphEdge * edge) { edges.removeAll(edge); };
+   void add_edge(GraphEdge * edge) { edges.push_back(edge); };
+   void remove_edge(GraphEdge * edge) { edges.removeAll(edge); };
    void resetVertexColour(QColor, qreal= 2, QColor= QColor(245,245,245));
 
 protected:

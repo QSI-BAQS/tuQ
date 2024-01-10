@@ -84,7 +84,7 @@ void MainWindow::addLattice() {
    if(dialog->exec() == QDialog::Accepted){
       unsigned long rows {rowsLineEdit->text().toULong()};
       unsigned long columns {columnsLineEdit->text().toULong()};
-      view->set_lattice(rows,columns);
+      view->setLattice(rows,columns);
    }
 }
 
