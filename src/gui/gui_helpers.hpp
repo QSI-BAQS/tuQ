@@ -25,7 +25,7 @@ public:
 
 void h_deleteEdge(GraphEdge *, QGraphicsScene &);
 void h_deleteVertex(GraphVertex &, QGraphicsScene &);
-unsigned long h_item_counter(int, const QGraphicsScene &);
+unsigned long h_itemCounter(int, const QGraphicsScene &);
 void h_localComplementation(GraphVertex &, QGraphicsScene &, QMenu * const);
 
 #endif //TUQ_GUI_HELPERS_HPP

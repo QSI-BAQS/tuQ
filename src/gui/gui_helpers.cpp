@@ -28,8 +28,8 @@ void h_deleteEdge(GraphEdge * edge, QGraphicsScene & scene) {
    // post-condition: any formerly connected (Graph)vertices are unaffected
 
    // remove the edge from (vector) alledges of both vertices
-   edge->p1vertex->removeEdge(edge);
-   edge->p2vertex->removeEdge(edge);
+   edge->p1vertex->remove_edge(edge);
+   edge->p2vertex->remove_edge(edge);
 
    // back out edge from scene
    scene.removeItem(edge);
@@ -40,7 +40,7 @@ void h_deleteVertex(GraphVertex & vertex, QGraphicsScene & scene) {
    // pre-condition: target object is type, GraphVertex
    // post-condition: all connected (Graph)edges are removed
 
-   // 'alledges' is a copy of container, edges, while removeEdge() executes
+   // 'alledges' is a copy of container, edges, while remove_edge() executes
    //  against that container...
    QVector<GraphEdge *> copy_edges= *vertex.alledges;
 
@@ -54,7 +54,7 @@ void h_deleteVertex(GraphVertex & vertex, QGraphicsScene & scene) {
    // placeholder: reset IDs?
 }
 
-unsigned long h_item_counter(int item_type, const QGraphicsScene & scene) {
+unsigned long h_itemCounter(int item_type, const QGraphicsScene & scene) {
    // count of items in scene by QGraphicsItem::Type
    // pre-condition: GraphVertex added to scene by GraphView::mousePressEvent
    // post-condition: counter assigned to vertexid of latest GraphVertex
@@ -159,8 +159,8 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene
    // ADD edge(s)
    for (Pair_Neighbours newEdge : add_edges) {
       auto * e= new GraphEdge(newEdge.vertex_1, newEdge.vertex_2, menu);
-      newEdge.vertex_1->addEdge(e);
-      newEdge.vertex_2->addEdge(e);
+      newEdge.vertex_1->add_edge(e);
+      newEdge.vertex_2->add_edge(e);
       scene.addItem(e);
    }
    // DELETE edge(s)
