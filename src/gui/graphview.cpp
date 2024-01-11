@@ -13,7 +13,7 @@
 GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
-   // *** TO DO: all rows, 67 columns accessible ***
+   // *** at his x, y setting: all rows, 70+ columns accessible ***
    // '... one unit on the scene is represented by one pixel on the screen.'
    scene->setSceneRect(-5000,-5000,10000,10000);
 
@@ -201,17 +201,38 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
    qreal xinc {70};
    qreal yinc {70};
 
+   GraphVertex * row_to_row_edges[n];
+   GraphVertex * ptr_vertex {};
+
    for (int i= 0; i < m; ++i) {
       for (int j= 0; j < n; ++j) {
+         // create vertex[row, column]
          auto vertex= new GraphVertex(vertexmenu,id);
          vertex->setPos(j*xinc,i*yinc);
          scene->addItem(vertex);
 
+         // by row, edge-per-column
+         if (j > 0){
+            auto * column_edge= new GraphEdge(ptr_vertex, vertex, edgemenu);
+            ptr_vertex->add_edge(column_edge);
+            vertex->add_edge(column_edge);
+            scene->addItem(column_edge);
+         }
+         // by column, edge-per-row
+         if (i > 0){
+            auto * row_edge= new GraphEdge(row_to_row_edges[j], vertex, edgemenu);
+            row_to_row_edges[j]->add_edge(row_edge);
+            vertex->add_edge(row_edge);
+            scene->addItem(row_edge);
+         }
+
+         // assemble (Graph-)vertices of previous row
+         ptr_vertex= vertex;
+         row_to_row_edges[j]= ptr_vertex;
+
          id += 1;
       }
    }
-   // *** TO DO: set edges (rejig h_localComplementation logic?) ***
-   // auto * e= new GraphEdge(p1v, p2v, edgemenu);
 }
 
 
