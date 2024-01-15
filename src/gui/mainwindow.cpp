@@ -31,38 +31,32 @@ MainWindow::MainWindow(QWidget *parent)
 // private:
 void MainWindow::createMenus() {
    fileMenu= menuBar()->addMenu(tr("&File"));
-   // TO DO: *** shortcut key(s) Ctrl + O ***
    fileMenu->addAction(tr("&Open"), this, [this](){
       openGraphDialog(graphopenfile);
-   });
-   // TO DO: *** shortcut key(s) Ctrl + S ***
+   },tr("Ctrl+o"));
    fileMenu->addAction(tr("&Save"), this, [this](){
       saveGraphDialog(graphsavefile);
-   });
-   // TO DO: *** shortcut key(s) Ctrl + Q ***
+   }, tr("Ctrl+s"));
    fileMenu->addAction(tr("E&xit"), this, [this](){
       QWidget::close();
-   });
+   }, tr("Ctrl+q"));
 
    editMenu= menuBar()->addMenu(tr("&Edit"));
    // TO DO: *** function; shortcut key(s) Ctrl + Z ***
    editMenu->addAction(tr("&Undo"));
-   // TO DO: *** shortcut key(s) Ctrl + 0 ***
    editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
       view->clear_scene();
-   });
+   }, tr("Alt+e+a"));
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
-   // TO DO: *** shortcut key(s) ***
    circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
       readCircuitDialog(graphreadcircuit);
-   });
+   }, tr("Ctrl+r"));
 
    latticeMenu= menuBar()->addMenu(tr("&Lattice"));
-   // TO DO: *** shortcut key(s) ***
    latticeMenu->addAction(tr("A&dd Lattice"), this, [this](){
       addLattice();
-   });
+   }, tr("Ctrl+l"));
 }
 
 void MainWindow::addLattice() {
