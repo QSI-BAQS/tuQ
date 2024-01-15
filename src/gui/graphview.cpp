@@ -13,8 +13,8 @@
 GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
-   // *** at his x, y setting: all rows, 70+ columns accessible ***
    // '... one unit on the scene is represented by one pixel on the screen.'
+   // *** at this x, y setting: all rows, 70+ columns accessible ***
    scene->setSceneRect(-5000,-5000,10000,10000);
 
    setScene(scene);
@@ -201,6 +201,11 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
    qreal xinc {70};
    qreal yinc {70};
 
+   // scale scene with [m,n]
+   // *** TO DO: better scaling; a fixed multiple also increases view margin ***
+   //     QSizeF radius {45,45};
+   scene->setSceneRect(-2500,-2500,qreal (m*92),qreal (n*92));
+
    GraphVertex * row_to_row_edges[n];
    GraphVertex * ptr_vertex {};
 
@@ -214,7 +219,7 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
          // by row, edge-per-column
          if (j > 0){
             auto * column_edge= new GraphEdge(ptr_vertex, vertex, edgemenu);
-            ptr_vertex->add_edge(column_edge);
+            ptr_vertex->add_edge(column_edge);   // TO DO: if ptr_vertex == nullptr?
             vertex->add_edge(column_edge);
             scene->addItem(column_edge);
          }
@@ -474,6 +479,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
    }
 
    QGraphicsView::mousePressEvent(event);
+   scene->update();
 }
 
 void GraphView::mouseReleaseEvent(QMouseEvent * event) {
