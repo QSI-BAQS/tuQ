@@ -4,23 +4,9 @@
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
 
-#include <QDialog>
-#include <QFormLayout>
 #include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QLineEdit>
-
-
-class InputDialog : public QDialog
-{
-   QString dialog_type;
-
-public:
-   explicit InputDialog(QString, QWidget * parent= nullptr);
-
-   QFormLayout * form;
-
-};
 
 
 void h_deleteEdge(GraphEdge *, QGraphicsScene &);
