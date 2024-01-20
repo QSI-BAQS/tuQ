@@ -2,7 +2,7 @@
 #define TUQ_MAINWINDOW_HPP
 
 #include "graphview.hpp"
-#include "io_dialog.hpp"
+#include "gui_helpers.hpp"
 
 #include <QMainWindow>
 
