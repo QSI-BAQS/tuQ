@@ -22,8 +22,6 @@ add_executable(tuQ src/main.cpp
         src/gui/mainwindow.cpp
         src/layout/gates_lattice_set.cpp
         src/layout/io_circuit.cpp
-        src/gui/io_dialog.cpp
-        src/gui/io_dialog.hpp
 )
 
 target_include_directories(tuQ PRIVATE src/layout/)
