@@ -3,8 +3,10 @@
 //
 #include "mainwindow.hpp"
 
+#include <QDebug>
 #include <QFileDialog>
 #include <QMenuBar>
+#include <QRegExpValidator>
 
 
 // public:
@@ -46,7 +48,7 @@ void MainWindow::createMenus() {
    editMenu->addAction(tr("&Undo"));
    editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
       view->clear_scene();
-   }, tr("Alt+e+a"));
+   }, tr("Alt+e+a"));  // FIX: this shortcut not displaying on menu
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
    circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
@@ -60,25 +62,36 @@ void MainWindow::createMenus() {
 }
 
 void MainWindow::addLattice() {
-   // create data input Dialog
+   // create input Dialog, positive integers only
    // pre-condition: call via MainWindow menu option
    // post-condition: populate menu function, Lattice > Add Lattice
 
    // TO DO: vanilla Linux includes title bar on dialog?
    auto * dialog= new InputDialog("Add Lattice");
 
+   // "Rows" and "Columns" QLineEdits
+   QRegExp positive_integer {"(0|[1-9][0-9]+)"};
+
    auto * rowsLineEdit= new QLineEdit(dialog);
+   rowsLineEdit->setValidator(new QRegExpValidator(positive_integer));
    rowsLineEdit->setPlaceholderText("0");
    dialog->form->insertRow(1,"&Rows", rowsLineEdit);
 
    auto * columnsLineEdit= new QLineEdit(dialog);
+   columnsLineEdit->setValidator(new QRegExpValidator(positive_integer));
    columnsLineEdit->setPlaceholderText("0");
    dialog->form->insertRow(2,"&Columns", columnsLineEdit);
 
-   if(dialog->exec() == QDialog::Accepted){
-      unsigned long rows {rowsLineEdit->text().toULong()};
-      unsigned long columns {columnsLineEdit->text().toULong()};
-      view->setLattice(rows,columns);
+   if (dialog->exec() == QDialog::Accepted){
+      // variable 'rows', 'columns' reads at QDialog::Accepted
+      unsigned long rows= rowsLineEdit->text().toULong();
+      unsigned long columns= columnsLineEdit->text().toULong();
+
+      // edge case: one input value = 0 but other input value > 0
+      if ((rows == 0 && columns > 0) || (rows > 0 && columns == 0))
+         view->setLattice(0,0);
+      else
+         view->setLattice(rows, columns);
    }
 }
 
