@@ -3,7 +3,6 @@
 //
 #include "mainwindow.hpp"
 
-#include <QDebug>
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QRegExpValidator>
