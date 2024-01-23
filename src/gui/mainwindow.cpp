@@ -47,7 +47,8 @@ void MainWindow::createMenus() {
    editMenu->addAction(tr("&Undo"));
    editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
       view->clear_scene();
-   }, tr("Alt+e+a"));  // FIX: this shortcut not displaying on menu
+      show();
+   }, tr("Shift+0"));
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
    circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
