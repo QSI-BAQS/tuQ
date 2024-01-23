@@ -14,8 +14,8 @@ GraphView::GraphView(QWidget *parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
-   // *** at this x, y setting: all rows, 70+ columns accessible ***
-   scene->setSceneRect(-5000,-5000,10000,10000);
+   // *** ~[121, 121] accessible at this sceneRect ***
+   scene->setSceneRect(-2500,-2500,11000,11000);
 
    setScene(scene);
    setMouseTracking(true);
@@ -172,7 +172,7 @@ void GraphView::saveGraph(const QString & wfile) {
          write << *v->vertexID << " "
          // vertex pos
          << v->pos().x() << " " << v->pos().y();
-         // edge coordinates (unique, i.e. no 'flips')
+         // edge coordinates (unique, i.e. no 'flips')  *** FIX: edges not saved from setLattice ***
          for (const GraphEdge * e: *v->alledges) {
             if (e->p1vertex
             && e->p1vertex->x() != v->pos().x()
@@ -191,20 +191,21 @@ void GraphView::saveGraph(const QString & wfile) {
 }
 
 void GraphView::setLattice(unsigned long m, unsigned long n) {
-//   circuit-to-graph layout
-//   pre-condition:
+//   define graph layout, by circuit input or menu option
+//   pre-condition (from circuit input):
 //      - json input is well-formed,
 //      - composition and layout of gates passes input checks.
-//   post-condition: the count of measurement patterns, including edges,
-//      reconciles with the count of (input) circuit gates
+//   post-condition (from circuit input): the count of measurement patterns,
+//       including edges, reconciles with the count of (input) circuit gates
    unsigned long id {1};
    qreal xinc {70};
    qreal yinc {70};
 
-   // scale scene with [m,n]
-   // *** TO DO: better scaling; a fixed multiple also increases view margin ***
-   //     QSizeF radius {45,45};
-   scene->setSceneRect(-2500,-2500,qreal (m*92),qreal (n*92));
+   // resize for big [m,n]
+   // ~ 3 seconds to render [501,501]; ~ 12 seconds to render [1001,1001]
+   scene->setSceneRect(-50, -50, qreal (n*101), qreal (m*101));
+   setAlignment(Qt::AlignTop | Qt:: AlignLeft);
+   show();
 
    GraphVertex * row_to_row_edges[n];
    GraphVertex * ptr_vertex {};
