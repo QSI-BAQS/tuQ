@@ -83,7 +83,7 @@ void MainWindow::addLattice() {
    dialog->form->insertRow(2,"&Columns", columnsLineEdit);
 
    if (dialog->exec() == QDialog::Accepted){
-      // variable 'rows', 'columns' reads at QDialog::Accepted
+      // QLineEdit values set at QDialog::Accepted
       unsigned long rows= rowsLineEdit->text().toULong();
       unsigned long columns= columnsLineEdit->text().toULong();
 
