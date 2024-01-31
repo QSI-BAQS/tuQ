@@ -15,6 +15,8 @@ GraphView::GraphView(QWidget *parent)
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
    // *** ~[121, 121] accessible at this sceneRect ***
+   /* FIX: setSceneRect has to be consistent between this and setLattice otherwise
+      lattice created in one set of coordinates do not show up in the other set */
    scene->setSceneRect(-2500,-2500,11000,11000);
 
    setScene(scene);
@@ -172,16 +174,15 @@ void GraphView::saveGraph(const QString & wfile) {
          write << *v->vertexID << " "
          // vertex pos
          << v->pos().x() << " " << v->pos().y();
-         // edge coordinates (unique, i.e. no 'flips')  *** FIX: edges not saved from setLattice ***
+         // edge coordinates (unique, i.e. no 'flips')
          for (const GraphEdge * e: *v->alledges) {
-            if (e->p1vertex
-            && e->p1vertex->x() != v->pos().x()
-            && e->p1vertex->y() != v->pos().y())
-               write << " " << e->p1vertex->x() << " " << e->p1vertex->y();
-            if (e->p2vertex
-            && e->p2vertex->x() != v->pos().x()
-            && e->p2vertex->y() != v->pos().y())
+            if ((e->p1vertex->x() != v->pos().x() &&
+            e->p2vertex->x() == v->pos().x())
+            && (e->p1vertex->y() != v->pos().y() &&
+            e->p2vertex->y() == v->pos().y()))
                write << " " << e->p2vertex->x() << " " << e->p2vertex->y();
+            else
+               write << " " << e->p1vertex->x() << " " << e->p1vertex->y();
          }
          write << "\n";
       }
@@ -200,13 +201,16 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
    unsigned long id {1};
    qreal xinc {70};
    qreal yinc {70};
+/*
+ * 31-JAN-24 the coordinates from a setLattice graph don't match the default
+ *    setSceneRect
 
    // resize for big [m,n]
    // ~ 3 seconds to render [501,501]; ~ 12 seconds to render [1001,1001]
    scene->setSceneRect(-50, -50, qreal (n*101), qreal (m*101));
    setAlignment(Qt::AlignTop | Qt:: AlignLeft);
    show();
-
+*/
    GraphVertex * row_to_row_edges[n];
    GraphVertex * ptr_vertex {};
 
@@ -220,7 +224,7 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
          // by row, edge-per-column
          if (j > 0){
             auto * column_edge= new GraphEdge(ptr_vertex, vertex, edgemenu);
-            ptr_vertex->add_edge(column_edge);   // TO DO: if ptr_vertex == nullptr?
+            ptr_vertex->add_edge(column_edge);
             vertex->add_edge(column_edge);
             scene->addItem(column_edge);
          }
