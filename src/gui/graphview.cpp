@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QKeyEvent>
+#include <QScrollBar>
 #include <QTextStream>
 
 
@@ -58,6 +59,17 @@ void GraphView::openGraph(const QString & rfile) {
 
       // add vertex to scene
       scene->addItem(v);
+
+      // set scrollbar slider positions by NW apex of lattice
+      if (vid == 1){
+         auto hbar= new QScrollBar(Qt::Horizontal, this);
+         setHorizontalScrollBar(hbar);
+         hbar->setSliderPosition((int) x - 25);
+
+         auto vbar= new QScrollBar(Qt::Vertical, this);
+         setVerticalScrollBar(vbar);
+         vbar->setSliderPosition((int) y - 25);
+      }
 
       vertex_data = in_stream.readLine();
    }
@@ -220,6 +232,19 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
          auto vertex= new GraphVertex(vertexmenu,id);
          vertex->setPos(j*xinc,i*yinc);
          scene->addItem(vertex);
+
+         // set scrollbar slider positions by NW apex of lattice
+         if (id == 1){
+            auto hbar= new QScrollBar(Qt::Horizontal, this);
+            setHorizontalScrollBar(hbar);
+            auto xpos= (int) vertex->pos().x();
+            hbar->setSliderPosition(xpos - 25);
+
+            auto vbar= new QScrollBar(Qt::Vertical, this);
+            setVerticalScrollBar(vbar);
+            auto ypos= (int) vertex->pos().y();
+            vbar->setSliderPosition(ypos - 25);
+         }
 
          // by row, edge-per-column
          if (j > 0){
