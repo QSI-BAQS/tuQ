@@ -181,7 +181,7 @@ void h_localComplementation(GraphVertex & lcv, QGraphicsScene & scene
 
 //private:
 void GraphSelect::createVerticalGroupBox() {
-   verticalGroupBox= new QGroupBox(tr("which Q2Graph setting do you require?"));
+   verticalGroupBox= new QGroupBox(tr("which tuQ setting do you require?"));
    auto * layout= new QVBoxLayout;
 
    for (int i= 0; i < 3; ++i) {
@@ -193,7 +193,7 @@ void GraphSelect::createVerticalGroupBox() {
    buttons[1]->setText("Simulator");
    buttons[2]->setText("Compiler");
 
-   buttons[3]= new QPushButton(tr("Exit Q2Graph"));
+   buttons[3]= new QPushButton(tr("Exit tuQ"));
    buttons[3]->setStyleSheet("QPushButton {color: red;}");
    layout->addWidget(buttons[3]);
 
