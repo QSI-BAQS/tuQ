@@ -19,25 +19,24 @@ class MainWindow : public QMainWindow
    QAction * a_compile;
    QAction * a_openAlgorithm;
    QAction * a_openGraph;
-//   QAction * a_readCircuit;
+   QAction * a_readCircuit;
    QAction * a_saveAlgorithm;
-   QAction * a_saveAs;
    QAction * a_saveGraph;
-//   QAction * a_simulatorReadCircuit;
+   QAction * a_simulate;
 
    QMenu * circuitMenu;
    QMenu * editMenu;
    QMenu * fileMenu;
-   QMenu * graphsMenu;
+   QMenu * graphMenu;
 
    void createMenus();
    void setActions();
 
    void addLattice();
 //   void gatesPalette();
-   void openGraphDialog(const QString *);
+   void dialogOpen(const QString *);
    void readCircuitDialog(const QString *);
-   void saveGraphDialog(const QString *);
+   void dialogSave(const QString *);
 
 private slots:
    void compilerMenu();
@@ -48,6 +47,8 @@ private slots:
 public:
    explicit MainWindow(QWidget * parent= nullptr);
 
+   const QString * algorithmopenfile;
+   const QString * algorithmsavefile;
    const QString * graphopenfile;
    const QString * graphreadcircuit;
    const QString * graphsavefile;
