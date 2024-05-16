@@ -16,13 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
    createMenus();
 
    settings= new GraphSelect();
-   // Q2Graph settings, 'Modeller'
+   // tuQ settings, 'Modeller'
    connect(settings->buttons[0],&QPushButton::clicked,this,&MainWindow::modellerMenu);
-   // Q2Graph settings, 'Simulator'
+   // tuQ settings, 'Simulator'
    connect(settings->buttons[1],&QPushButton::clicked,this,&MainWindow::simulatorMenu);
-   // Q2Graph settings, 'Compiler'
+   // tuQ settings, 'Compiler'
    connect(settings->buttons[2],&QPushButton::clicked,this,&MainWindow::compilerMenu);
-   // Q2Graph settings, 'Exit Q2Graph'
+   // tuQ settings, 'Exit tuQ'
    connect(settings->buttons[3],&QPushButton::clicked, this,&MainWindow::exitButton);
 
    settings->setModal(true);   // prevent a user from bypassing 'settings'
@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
    view= new GraphView(this);
    view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
    setCentralWidget(view);
-   setWindowTitle(tr("Q2Graph"));
+   setWindowTitle(tr("tuQ"));
 }
 
 // private:
@@ -73,9 +73,11 @@ void MainWindow::compilerMenu() {
    // 'grey out' menu items
    a_addGate->setEnabled(false);
    a_addLattice->setEnabled(false);
-   a_openAlgorithm->setEnabled(false);
+   a_openGraph->setEnabled(false);
+   a_readCircuit->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
-   a_saveAs->setEnabled(false);
+   a_saveGraph->setEnabled(false);
+   a_simulate->setEnabled(false);
 
    settings->close();   // close dialog
 }
@@ -84,7 +86,6 @@ void MainWindow::createMenus() {
    fileMenu= menuBar()->addMenu(tr("&File"));
    fileMenu->addAction(a_openGraph);
    fileMenu->addAction(a_saveGraph);
-   fileMenu->addAction(a_saveAs);
 
    fileMenu->addSeparator();
    fileMenu->addAction(a_openAlgorithm);
@@ -104,14 +105,41 @@ void MainWindow::createMenus() {
    }, tr("Shift+0"));
 
    circuitMenu= menuBar()->addMenu(tr("&Circuit"));
+   circuitMenu->addAction(a_readCircuit);
    circuitMenu->addAction(a_compile);
-   circuitMenu->addAction(tr("&Read Circuit"), this, [this](){
-      readCircuitDialog(graphreadcircuit);
-   }, tr("Ctrl+r"));
 
-   graphsMenu= menuBar()->addMenu(tr("&Graphs"));
-   graphsMenu->addAction(a_addGate);
-   graphsMenu->addAction(a_addLattice);
+   graphMenu= menuBar()->addMenu(tr("&Graph"));
+   graphMenu->addAction(a_addGate);
+   graphMenu->addAction(a_addLattice);
+   graphMenu->addAction(a_simulate);
+}
+
+void MainWindow::dialogOpen(const QString * openfile) {
+   QString file_name= QFileDialog::getOpenFileName(this, tr("Open File"),""
+         ,tr("Text files (*.txt)"));
+   openfile= &file_name;
+
+   // handle 'cancel' at Dialog box
+   if (openfile->isEmpty())
+      return ;
+   else
+      view->openGraph(*openfile);
+}
+
+void MainWindow::dialogSave(const QString * savefile) {
+   QString file_name= QFileDialog::getSaveFileName(this, tr("Save File"),""
+         ,tr("Text files (*.txt)"));
+   // QFileDialog.setDefaultSuffix() does not work
+   if (!file_name.endsWith(".txt"))
+      file_name.append(".txt");
+
+   savefile= &file_name;
+
+   // handle 'cancel' at Dialog box
+   if (savefile->isEmpty())
+      return ;
+   else
+      view->saveGraph(*savefile);
 }
 
 void MainWindow::exitButton() {
@@ -125,20 +153,9 @@ void MainWindow::modellerMenu() {
    a_compile->setEnabled(false);
    a_openAlgorithm->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
+   a_simulate->setEnabled(false);
 
    settings->close();   // close dialog
-}
-
-void MainWindow::openGraphDialog(const QString * openfile) {
-   QString file_name= QFileDialog::getOpenFileName(this, tr("Open File"),""
-         ,tr("Text files (*.txt)"));
-   openfile= &file_name;
-
-   // handle 'cancel' at Dialog box
-   if (openfile->isEmpty())
-      return ;
-   else
-      view->openGraph(*openfile);
 }
 
 // TO DO: recut to support QAction readCircuit (Modeller.readCircuit
@@ -157,56 +174,47 @@ void  MainWindow::readCircuitDialog(const QString * circuitfile) {
       view->readCircuit(*circuitfile);
 }
 
-void MainWindow::saveGraphDialog(const QString * savefile) {
-   QString file_name= QFileDialog::getSaveFileName(this, tr("Save File"),""
-                                                   ,tr("Text files (*.txt)"));
-   // QFileDialog.setDefaultSuffix() does not work
-   if (!file_name.endsWith(".txt"))
-      file_name.append(".txt");
-
-   savefile= &file_name;
-
-   // handle 'cancel' at Dialog box
-   if (savefile->isEmpty())
-      return ;
-   else
-      view->saveGraph(*savefile);
-}
-
 void MainWindow::setActions() {
    a_addGate= new QAction(tr("Add Ga&te"),this);
    a_addGate->setShortcut(tr("Ctrl+t"));
-//   connect(a_addGate,&QAction::triggered,[this](){gatesPalette();});   // private method
+//   connect(a_addGate,&QAction::triggered,[this](){ gatesPalette(); });   // private method
 
    a_addLattice= new QAction(tr("A&dd Lattice"),this);
    a_addLattice->setShortcut(tr("Ctrl+l"));
-   connect(a_addLattice,&QAction::triggered,[this](){addLattice();});
+   connect(a_addLattice,&QAction::triggered,[this](){ addLattice(); });
 
    a_compile= new QAction(tr("Co&mpile"),this);
    a_compile->setShortcut(tr("Ctrl+m"));
-//   connect(a_compile,&QAction::triggered,[this](){compile();});
+//   connect(a_compile,&QAction::triggered,[this](){ compile(); });
 
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
    a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
-//   connect(a_openAlgorithm,&QAction::triggered,[this](){openAlgorithm();});
+   connect(a_openAlgorithm,&QAction::triggered
+           ,[this](){ dialogOpen(algorithmopenfile); });
 
    a_openGraph= new QAction(tr("&Open Graph"),this);
    a_openGraph->setShortcut(tr("Ctrl+o"));
    connect(a_openGraph,&QAction::triggered
-           ,[this](){ openGraphDialog(graphopenfile);});
+           ,[this](){ dialogOpen(graphopenfile); });
+
+   a_readCircuit= new QAction(tr("&Read Circuit"),this);
+   a_readCircuit->setShortcut(tr("Ctrl+r"));
+   connect(a_readCircuit,&QAction::triggered,this
+           ,[this](){ readCircuitDialog(graphreadcircuit); });
 
    a_saveAlgorithm= new QAction(tr("Sa&ve Algorithm"),this);
    a_saveAlgorithm->setShortcut(tr("Ctrl+Alt+s"));
-//   connect(a_saveAlgorithm,&QAction::triggered,[this](){saveAlgorithm();});
-
-   a_saveAs= new QAction(tr("Save &As"),this);
-   a_saveAs->setShortcut(tr("Ctrl+Alt+a"));
-//   connect(a_saveAs,&QAction::triggered,[this](){saveAs();});
+   connect(a_saveAlgorithm,&QAction::triggered
+           ,[this](){ dialogSave(algorithmsavefile); });
 
    a_saveGraph= new QAction(tr("&Save Graph"),this);
    a_saveGraph->setShortcut(tr("Ctrl+s"));
    connect(a_saveGraph,&QAction::triggered,this
-           ,[this](){ saveGraphDialog(graphsavefile);});
+           ,[this](){ dialogSave(graphsavefile); });
+
+   a_simulate= new QAction(tr("S&imulate"),this);
+   a_simulate->setShortcut(tr("Ctrl+i"));
+//   connect(a_simulate,&QAction::triggered,[this](){ simulate(); });
 }
 
 void MainWindow::simulatorMenu() {
@@ -214,7 +222,6 @@ void MainWindow::simulatorMenu() {
    a_addLattice->setEnabled(false);
    a_compile->setEnabled(false);
    a_openGraph->setEnabled(false);
-   a_saveAs->setEnabled(false);
    a_saveGraph->setEnabled(false);
 
    settings->close();   // close dialog
