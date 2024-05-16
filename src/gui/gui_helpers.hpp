@@ -23,7 +23,7 @@ class GraphSelect : public QDialog
 public:
    explicit GraphSelect(QWidget * parent= nullptr);
 
-   QPushButton * buttons[4];   // Q2Graph settings buttons
+   QPushButton * buttons[4];   // tuQ settings buttons
 };
 
 class InputDialog : public QDialog
