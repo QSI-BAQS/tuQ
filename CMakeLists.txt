@@ -15,6 +15,7 @@ find_package(Qt5 COMPONENTS
         REQUIRED)
 
 add_executable(tuQ src/main.cpp
+        src/gui/compilersimulatorview.cpp
         src/gui/graphedge.cpp
         src/gui/graphvertex.cpp
         src/gui/graphview.cpp
