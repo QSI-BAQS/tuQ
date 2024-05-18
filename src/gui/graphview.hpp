@@ -27,7 +27,7 @@ class GraphView : public QGraphicsView
    void setCursorLabel(int);
 
 public:
-   explicit GraphView(QWidget *parent= nullptr);
+   explicit GraphView(QWidget * parent= nullptr);
 
    void clear_scene() { scene->clear(); }
    void openGraph(const QString &);

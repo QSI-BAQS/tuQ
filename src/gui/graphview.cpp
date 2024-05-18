@@ -11,7 +11,7 @@
 
 
 // public:
-GraphView::GraphView(QWidget *parent)
+GraphView::GraphView(QWidget * parent)
    : QGraphicsView(parent), scene(new QGraphicsScene(this))
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
