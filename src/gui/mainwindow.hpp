@@ -1,18 +1,24 @@
 #ifndef TUQ_MAINWINDOW_HPP
 #define TUQ_MAINWINDOW_HPP
 
+#include "compilersimulatorview.hpp"
 #include "graphview.hpp"
 #include "gui_helpers.hpp"
 
 #include <QMainWindow>
+#include <QVariant>
 
 
 class MainWindow : public QMainWindow
 {
    Q_OBJECT
 
+   bool isModeller {false};
+   bool * const p_isModeller= &isModeller;
+
    GraphSelect * settings;
-   GraphView * view {};
+   CompilerSimulatorView * view_compilersimulator;
+   GraphView * view_modeller;
 
    QAction * a_addGate;
    QAction * a_addLattice;
@@ -29,20 +35,20 @@ class MainWindow : public QMainWindow
    QMenu * fileMenu;
    QMenu * graphMenu;
 
-   void createMenus();
-   void setActions();
-
    void addLattice();
-//   void gatesPalette();
+   void createMenus();
    void dialogOpen(const QString *);
-   void readCircuitDialog(const QString *);
    void dialogSave(const QString *);
+//   void gatesPalette();
+   void readCircuitDialog(const QString *);
+   void setActions();
+   void setView();
 
 private slots:
-   void compilerMenu();
-   void exitButton();
-   void modellerMenu();
-   void simulatorMenu();
+   void noSession();
+   void setCompiler();
+   void setModeller();
+   void setSimulator();
 
 public:
    explicit MainWindow(QWidget * parent= nullptr);

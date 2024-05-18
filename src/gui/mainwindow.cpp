@@ -9,7 +9,7 @@
 
 
 // public:
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget * parent)
    : QMainWindow(parent)
 {
    setActions();
@@ -17,20 +17,17 @@ MainWindow::MainWindow(QWidget *parent)
 
    settings= new GraphSelect();
    // tuQ settings, 'Modeller'
-   connect(settings->buttons[0],&QPushButton::clicked,this,&MainWindow::modellerMenu);
+   connect(settings->buttons[0],&QPushButton::clicked,this, &MainWindow::setModeller);
    // tuQ settings, 'Simulator'
-   connect(settings->buttons[1],&QPushButton::clicked,this,&MainWindow::simulatorMenu);
+   connect(settings->buttons[1],&QPushButton::clicked,this, &MainWindow::setSimulator);
    // tuQ settings, 'Compiler'
-   connect(settings->buttons[2],&QPushButton::clicked,this,&MainWindow::compilerMenu);
+   connect(settings->buttons[2],&QPushButton::clicked,this, &MainWindow::setCompiler);
    // tuQ settings, 'Exit tuQ'
-   connect(settings->buttons[3],&QPushButton::clicked, this,&MainWindow::exitButton);
+   connect(settings->buttons[3],&QPushButton::clicked, this, &MainWindow::noSession);
 
    settings->setModal(true);   // prevent a user from bypassing 'settings'
    settings->show();
 
-   view= new GraphView(this);
-   view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-   setCentralWidget(view);
    setWindowTitle(tr("tuQ"));
 }
 
@@ -63,23 +60,10 @@ void MainWindow::addLattice() {
 
       // edge case: one input value = 0 but other input value > 0
       if ((rows == 0 && columns > 0) || (rows > 0 && columns == 0))
-         view->setLattice(0,0);
+         view_modeller->setLattice(0, 0);
       else
-         view->setLattice(rows, columns);
+         view_modeller->setLattice(rows, columns);
    }
-}
-
-void MainWindow::compilerMenu() {
-   // 'grey out' menu items
-   a_addGate->setEnabled(false);
-   a_addLattice->setEnabled(false);
-   a_openGraph->setEnabled(false);
-   a_readCircuit->setEnabled(false);
-   a_saveAlgorithm->setEnabled(false);
-   a_saveGraph->setEnabled(false);
-   a_simulate->setEnabled(false);
-
-   settings->close();   // close dialog
 }
 
 void MainWindow::createMenus() {
@@ -100,7 +84,7 @@ void MainWindow::createMenus() {
    // TO DO: *** function; shortcut key(s) Ctrl + Z ***
    //editMenu->addAction(tr("&Undo"));
    editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
-      view->clear_scene();
+      view_modeller->clear_scene();
       show();
    }, tr("Shift+0"));
 
@@ -123,7 +107,7 @@ void MainWindow::dialogOpen(const QString * openfile) {
    if (openfile->isEmpty())
       return ;
    else
-      view->openGraph(*openfile);
+      view_modeller->openGraph(*openfile);
 }
 
 void MainWindow::dialogSave(const QString * savefile) {
@@ -139,23 +123,12 @@ void MainWindow::dialogSave(const QString * savefile) {
    if (savefile->isEmpty())
       return ;
    else
-      view->saveGraph(*savefile);
+      view_modeller->saveGraph(*savefile);
 }
 
-void MainWindow::exitButton() {
+void MainWindow::noSession() {
    settings->close();
    this->close();
-}
-
-void MainWindow::modellerMenu() {
-   // 'grey out' menu items
-   a_addGate->setEnabled(false);
-   a_compile->setEnabled(false);
-   a_openAlgorithm->setEnabled(false);
-   a_saveAlgorithm->setEnabled(false);
-   a_simulate->setEnabled(false);
-
-   settings->close();   // close dialog
 }
 
 // TO DO: recut to support QAction readCircuit (Modeller.readCircuit
@@ -171,7 +144,7 @@ void  MainWindow::readCircuitDialog(const QString * circuitfile) {
    if (circuitfile->isEmpty())
       return ;
    else
-      view->readCircuit(*circuitfile);
+      view_modeller->readCircuit(*circuitfile);
 }
 
 void MainWindow::setActions() {
@@ -188,9 +161,9 @@ void MainWindow::setActions() {
 //   connect(a_compile,&QAction::triggered,[this](){ compile(); });
 
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
-   a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
+   a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));/*
    connect(a_openAlgorithm,&QAction::triggered
-           ,[this](){ dialogOpen(algorithmopenfile); });
+           ,[this](){ dialogOpen(algorithmopenfile); });*/
 
    a_openGraph= new QAction(tr("&Open Graph"),this);
    a_openGraph->setShortcut(tr("Ctrl+o"));
@@ -203,9 +176,9 @@ void MainWindow::setActions() {
            ,[this](){ readCircuitDialog(graphreadcircuit); });
 
    a_saveAlgorithm= new QAction(tr("Sa&ve Algorithm"),this);
-   a_saveAlgorithm->setShortcut(tr("Ctrl+Alt+s"));
+   a_saveAlgorithm->setShortcut(tr("Ctrl+Alt+s"));/*
    connect(a_saveAlgorithm,&QAction::triggered
-           ,[this](){ dialogSave(algorithmsavefile); });
+           ,[this](){ dialogSave(algorithmsavefile); });*/
 
    a_saveGraph= new QAction(tr("&Save Graph"),this);
    a_saveGraph->setShortcut(tr("Ctrl+s"));
@@ -217,12 +190,57 @@ void MainWindow::setActions() {
 //   connect(a_simulate,&QAction::triggered,[this](){ simulate(); });
 }
 
-void MainWindow::simulatorMenu() {
+void MainWindow::setCompiler() {
+   // 'grey out' menu items
+   a_addGate->setEnabled(false);
+   a_addLattice->setEnabled(false);
+   a_openGraph->setEnabled(false);
+   a_readCircuit->setEnabled(false);
+   a_saveAlgorithm->setEnabled(false);
+   a_saveGraph->setEnabled(false);
+   a_simulate->setEnabled(false);
+
+   setView();
+
+   settings->close();   // close dialog
+}
+
+void MainWindow::setModeller() {
+   // 'grey out' menu items
+   a_addGate->setEnabled(false);
+   a_compile->setEnabled(false);
+   a_openAlgorithm->setEnabled(false);
+   a_saveAlgorithm->setEnabled(false);
+   a_simulate->setEnabled(false);
+
+   *p_isModeller= true;
+   setView();
+
+   settings->close();   // close dialog
+}
+
+void MainWindow::setSimulator() {
    // 'grey out' menu items
    a_addLattice->setEnabled(false);
    a_compile->setEnabled(false);
    a_openGraph->setEnabled(false);
    a_saveGraph->setEnabled(false);
 
+   setView();
+
    settings->close();   // close dialog
+}
+
+// set the QGraphicsView to instantiate as central widget
+void MainWindow::setView() {
+   if (isModeller){
+      view_modeller= new GraphView(this);
+      view_modeller->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+      setCentralWidget(view_modeller);
+   }
+   else {
+      view_compilersimulator= new CompilerSimulatorView(this);
+      view_compilersimulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+      setCentralWidget(view_compilersimulator);
+   }
 }
