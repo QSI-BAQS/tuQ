@@ -25,7 +25,6 @@ tags
 *.debug
 src/layout/json.hpp
 Makefile*
-min_pauli_tracker.hpp
 *.prl
 *.app
 moc_*.cpp
