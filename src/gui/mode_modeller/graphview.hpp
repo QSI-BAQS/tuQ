@@ -2,7 +2,7 @@
 #define TUQ_GRAPHVIEW_HPP
 
 #include "gates_lattice_set.hpp"
-#include "gui_helpers.hpp"
+#include "modeller_helpers.hpp"
 #include "io_circuit.hpp"
 
 #include <fstream>

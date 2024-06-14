@@ -1,5 +1,5 @@
 //
-// specify view/scene objects
+// specify modeller view/scene objects
 //
 # include "graphview.hpp"
 

@@ -1,5 +1,5 @@
-#ifndef TUQ_GUI_HELPERS_HPP
-#define TUQ_GUI_HELPERS_HPP
+#ifndef TUQ_MODELLER_HELPERS_HPP
+#define TUQ_MODELLER_HELPERS_HPP
 
 #include "graphedge.hpp"
 #include "graphvertex.hpp"
@@ -42,4 +42,4 @@ void h_deleteVertex(GraphVertex &, QGraphicsScene &);
 unsigned long h_itemCounter(int, const QGraphicsScene &);
 void h_localComplementation(GraphVertex &, QGraphicsScene &, QMenu *);
 
-#endif //TUQ_GUI_HELPERS_HPP
+#endif //TUQ_MODELLER_HELPERS_HPP
