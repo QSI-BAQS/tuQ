@@ -1,17 +1,11 @@
-#ifndef TUQ_MODELLER_HELPERS_HPP
-#define TUQ_MODELLER_HELPERS_HPP
-
-#include "graphedge.hpp"
-#include "graphvertex.hpp"
+#ifndef TUQ_GUI_HELPERS_HPP
+#define TUQ_GUI_HELPERS_HPP
 
 #include <QDialog>
 #include <QFormLayout>
-#include <QGraphicsItem>
-#include <QGraphicsScene>
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QRegExp>
 
 
 class GraphSelect : public QDialog
@@ -36,10 +30,4 @@ public:
    QFormLayout * form;
 };
 
-
-void h_deleteEdge(GraphEdge *, QGraphicsScene &);
-void h_deleteVertex(GraphVertex &, QGraphicsScene &);
-unsigned long h_itemCounter(int, const QGraphicsScene &);
-void h_localComplementation(GraphVertex &, QGraphicsScene &, QMenu *);
-
-#endif //TUQ_MODELLER_HELPERS_HPP
+#endif //TUQ_GUI_HELPERS_HPP
