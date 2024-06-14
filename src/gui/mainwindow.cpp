@@ -28,7 +28,6 @@ MainWindow::MainWindow(QWidget * parent)
    settings->setModal(true);   // prevent a user from bypassing 'settings'
    settings->show();
 
-   setWindowTitle(tr("tuQ"));
 }
 
 // private:
@@ -93,7 +92,7 @@ void MainWindow::createMenus() {
    circuitMenu->addAction(a_compile);
 
    graphMenu= menuBar()->addMenu(tr("&Graph"));
-   graphMenu->addAction(a_addGate);
+//   graphMenu->addAction(a_addGate);
    graphMenu->addAction(a_addLattice);
    graphMenu->addAction(a_simulate);
 }
@@ -148,10 +147,10 @@ void  MainWindow::readCircuitDialog(const QString * circuitfile) {
 }
 
 void MainWindow::setActions() {
-   a_addGate= new QAction(tr("Add Ga&te"),this);
+/*   a_addGate= new QAction(tr("Add Ga&te"),this);
    a_addGate->setShortcut(tr("Ctrl+t"));
 //   connect(a_addGate,&QAction::triggered,[this](){ gatesPalette(); });   // private method
-
+*/
    a_addLattice= new QAction(tr("A&dd Lattice"),this);
    a_addLattice->setShortcut(tr("Ctrl+l"));
    connect(a_addLattice,&QAction::triggered,[this](){ addLattice(); });
@@ -192,7 +191,7 @@ void MainWindow::setActions() {
 
 void MainWindow::setCompiler() {
    // 'grey out' menu items
-   a_addGate->setEnabled(false);
+//   a_addGate->setEnabled(false);
    a_addLattice->setEnabled(false);
    a_openGraph->setEnabled(false);
    a_readCircuit->setEnabled(false);
@@ -200,6 +199,7 @@ void MainWindow::setCompiler() {
    a_saveGraph->setEnabled(false);
    a_simulate->setEnabled(false);
 
+   *p_view_setting= tuQ_mode::compiler;
    setView();
 
    settings->close();   // close dialog
@@ -207,14 +207,13 @@ void MainWindow::setCompiler() {
 
 void MainWindow::setModeller() {
    // 'grey out' menu items
-   a_addGate->setEnabled(false);
+//   a_addGate->setEnabled(false);
    a_compile->setEnabled(false);
    a_openAlgorithm->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
    a_simulate->setEnabled(false);
 
-   *p_isModeller= true;
-   setView();
+   setView();   // tuQ_mode::mode_modeller is default view_setting
 
    settings->close();   // close dialog
 }
@@ -226,6 +225,7 @@ void MainWindow::setSimulator() {
    a_openGraph->setEnabled(false);
    a_saveGraph->setEnabled(false);
 
+   *p_view_setting= tuQ_mode::simulator;
    setView();
 
    settings->close();   // close dialog
@@ -233,14 +233,25 @@ void MainWindow::setSimulator() {
 
 // set the QGraphicsView to instantiate as central widget
 void MainWindow::setView() {
-   if (isModeller){
+   if (view_setting == tuQ_mode::compiler){
+      view_compiler= new CompilerView(this);
+      view_compiler->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+      setCentralWidget(view_compiler);
+
+      setWindowTitle(tr("tuQ: compiler"));
+   }
+   else if (view_setting == tuQ_mode::modeller){
       view_modeller= new GraphView(this);
       view_modeller->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_modeller);
+
+      setWindowTitle(tr("tuQ: mode_modeller"));
    }
-   else {
-      view_compilersimulator= new CompilerSimulatorView(this);
-      view_compilersimulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-      setCentralWidget(view_compilersimulator);
+   else if (view_setting == tuQ_mode::simulator){
+      view_simulator= new SimulatorView(this);
+      view_simulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+      setCentralWidget(view_simulator);
+
+      setWindowTitle(tr("tuQ: mode_simulator"));
    }
 }

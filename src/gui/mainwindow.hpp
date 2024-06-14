@@ -1,9 +1,10 @@
 #ifndef TUQ_MAINWINDOW_HPP
 #define TUQ_MAINWINDOW_HPP
 
-#include "compilersimulatorview.hpp"
-#include "graphview.hpp"
+#include "mode_compiler/compilerview.hpp"
+#include "mode_modeller/graphview.hpp"
 #include "gui_helpers.hpp"
+#include "mode_simulator/simulatorview.hpp"
 
 #include <QMainWindow>
 #include <QVariant>
@@ -13,12 +14,14 @@ class MainWindow : public QMainWindow
 {
    Q_OBJECT
 
-   bool isModeller {false};
-   bool * const p_isModeller= &isModeller;
+   enum class tuQ_mode {compiler,modeller,simulator};
+   tuQ_mode view_setting {tuQ_mode::modeller};
+   tuQ_mode * const p_view_setting= &view_setting;
 
    GraphSelect * settings;
-   CompilerSimulatorView * view_compilersimulator;
+   CompilerView * view_compiler;
    GraphView * view_modeller;
+   SimulatorView * view_simulator;
 
    QAction * a_addGate;
    QAction * a_addLattice;
