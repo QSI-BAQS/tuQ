@@ -23,7 +23,7 @@ class MainWindow : public QMainWindow
    GraphView * view_modeller;
    SimulatorView * view_simulator;
 
-   QAction * a_addGate;
+//   QAction * a_addGate;
    QAction * a_addLattice;
    QAction * a_compile;
    QAction * a_openAlgorithm;
