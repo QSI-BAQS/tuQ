@@ -1,23 +1,26 @@
-#ifndef TUQ_OPERATOR_PALETTE_HPP
-#define TUQ_OPERATOR_PALETTE_HPP
+#ifndef TUQ_OPERATORPALETTE_HPP
+#define TUQ_OPERATORPALETTE_HPP
 
-#include <QGraphicsItem>
-#include <QPainter>
+#include <QDialog>
+#include <QGroupBox>
 
 
-class OperatorPalette : public QGraphicsItem
+class OperatorPalette : public QDialog
 {
+   QGroupBox * p_groupBox= nullptr;
+
+   const static unsigned short pattern_nr {9};
+   // 0x2020: dagger
+   QString patterns [pattern_nr] {"X","Y","Z","Hadamard","S",QChar(0x2020)
+         ,"CNOT","Swap","T"};
+
+   void setOperatorPalette();
+
 public:
-   // QGraphicsItem::Type = 4
-   OperatorPalette();
+   explicit OperatorPalette(QWidget * parent= nullptr);
 
-   QRectF boundingRect() const override;
-   void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-
-protected:
-   void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-   void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+   QPushButton * pattern_buttons[pattern_nr + 1];
 };
 
-#endif //TUQ_OPERATOR_PALETTE_HPP
+
+#endif //TUQ_OPERATORPALETTE_HPP
