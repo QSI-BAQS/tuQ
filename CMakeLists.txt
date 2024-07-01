@@ -25,7 +25,7 @@ add_executable(tuQ src/main.cpp
       src/layout/gates_lattice_set.cpp
       src/layout/io_circuit.cpp
       src/gui/mode_simulator/operatorpalette.cpp
-      src/gui/mode_simulator/operatorpalette.hpp
+      src/gui/mode_simulator/simulatorscene.cpp
 )
 
 target_include_directories(tuQ PRIVATE src/layout/)
