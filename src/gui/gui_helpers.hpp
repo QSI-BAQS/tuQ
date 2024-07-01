@@ -7,10 +7,13 @@
 #include <QLineEdit>
 #include <QPushButton>
 
+// <QDialog>, <QGroupBox>, <QPushButton>
+#pragma once
+
 
 class GraphSelect : public QDialog
 {
-   QGroupBox * verticalGroupBox;
+   QGroupBox * verticalGroupBox= nullptr;
 
    void createVerticalGroupBox();
 
