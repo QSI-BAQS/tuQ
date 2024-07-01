@@ -238,7 +238,7 @@ void MainWindow::setView() {
       view_compiler->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_compiler);
 
-      setWindowTitle(tr("tuQ: compiler"));
+      setWindowTitle(tr("tuQ: mode_compiler"));
    }
    else if (view_setting == tuQ_mode::modeller){
       view_modeller= new GraphView(this);
