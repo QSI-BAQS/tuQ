@@ -7,13 +7,13 @@
 
 // public:
 SimulatorView::SimulatorView(QWidget * parent)
-      : QGraphicsView(parent), s_scene(new QGraphicsScene(this))
+      : QGraphicsView(parent), s_scene(new AlgorithmLattice(this))
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
    // *** ~[121, 121] accessible at this sceneRect ***
    /* FIX: setSceneRect has to be consistent between this and setLattice otherwise
       lattice created in one set of coordinates do not show up in the other set */
-   s_scene->setSceneRect(-2500,-2500,11000,11000);
+   s_scene->setSceneRect(-750,-500,1500,1000);
 
    setScene(s_scene);
 

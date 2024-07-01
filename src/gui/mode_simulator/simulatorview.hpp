@@ -1,7 +1,7 @@
 #ifndef TUQ_SIMULATORVIEW_HPP
 #define TUQ_SIMULATORVIEW_HPP
 
-#include "operatorpalette.hpp"
+#include "simulatorscene.hpp"
 
 #include <fstream>
 #include <QGraphicsView>
@@ -9,9 +9,7 @@
 
 class SimulatorView : public QGraphicsView
 {
-   Q_OBJECT
-
-   QGraphicsScene * s_scene;
+   AlgorithmLattice * s_scene;
 
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
