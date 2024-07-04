@@ -9,6 +9,9 @@
 #include <QGraphicsView>
 #include <QLabel>
 
+// <QGraphicsView>
+#pragma once
+
 
 class GraphView : public QGraphicsView
 {

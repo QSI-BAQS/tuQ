@@ -6,6 +6,9 @@
 #include <QMenu>
 #include <QPainter>
 
+// <QPainter>
+#pragma once
+
 
 class GraphEdge;
 
