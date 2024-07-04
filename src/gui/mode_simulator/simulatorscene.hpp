@@ -2,9 +2,11 @@
 #define TUQ_SIMULATORSCENE_HPP
 
 #include "operatorpalette.hpp"
+#include "signmeasure.hpp"
 
 #include <QGraphicsScene>
 
+// <QGraphicsScene>
 #pragma once
 
 
@@ -15,6 +17,14 @@ class AlgorithmLattice : public QGraphicsScene
    Q_OBJECT
 
    OperatorPalette * p_operators;
+   QGraphicsSimpleTextItem * p_operatorType;
+
+   void placeOperator(QString);
+
+private slots:
+   void changeRow();
+   void measurementsID(int);
+   void patternsID(int);
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
