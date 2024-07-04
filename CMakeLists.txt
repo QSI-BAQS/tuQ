@@ -21,11 +21,12 @@ add_executable(tuQ src/main.cpp
       src/gui/mode_modeller/graphvertex.cpp
       src/gui/mode_modeller/graphview.cpp
       src/gui/mode_modeller/modeller_helpers.cpp
+      src/gui/mode_simulator/operatorpalette.cpp
+      src/gui/mode_simulator/signmeasure.cpp
+      src/gui/mode_simulator/simulatorscene.cpp
       src/gui/mode_simulator/simulatorview.cpp
       src/layout/gates_lattice_set.cpp
       src/layout/io_circuit.cpp
-      src/gui/mode_simulator/operatorpalette.cpp
-      src/gui/mode_simulator/simulatorscene.cpp
 )
 
 target_include_directories(tuQ PRIVATE src/layout/)
