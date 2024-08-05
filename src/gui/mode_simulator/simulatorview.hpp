@@ -1,7 +1,7 @@
 #ifndef TUQ_SIMULATORVIEW_HPP
 #define TUQ_SIMULATORVIEW_HPP
 
-#include "simulatorscene.hpp"
+#include "algorithmlattice.hpp"
 
 #include <fstream>
 #include <QGraphicsView>
