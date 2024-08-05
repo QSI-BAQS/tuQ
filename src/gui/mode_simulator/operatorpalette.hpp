@@ -25,8 +25,8 @@ public:
    const QChar sigma {0x03C3};   // UTF-16: lower-case sigma
    const QString measurements[measurements_nr] {sigma % " x",sigma % " y",sigma % " z"};
 
-   const QString patterns[pattern_nr] {"X","Y","Z","Hadamard","S"
-         ,"CNOT","Swap","T"};
+   const QString patterns[pattern_nr] {"X-rotation","Y-rotation","Z-rotation"
+                                       ,"Hadamard","S","CNOT","Swap","T"};
 
    QButtonGroup * measurement_buttons;
    QButtonGroup * pattern_buttons;
