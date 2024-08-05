@@ -2,57 +2,50 @@
 // proxy lattice for (OperatorPalette) patterns
 //
 
-#include "simulatorscene.hpp"
-
+#include "algorithmlattice.hpp"
+//#include <QDebug>
 
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
       : QGraphicsScene(parent)
 {
+   setSceneRect(latticeDims);
 //   setMouseTracking(true);
    p_operators= new OperatorPalette();
 
    // method by (p_operators) button id, excluding button 'change row'
-   connect(p_operators->measurement_buttons,&QButtonGroup::idClicked, this
-           ,&AlgorithmLattice::measurementsID);
-   connect(p_operators->pattern_buttons,&QButtonGroup::idClicked, this
-           ,&AlgorithmLattice::patternsID);
+   connect(p_operators->measurement_buttons,&QButtonGroup::idClicked
+           ,[this](const int id){
+      placeOperator(p_operators->measurements[id], columnMarker);
+   });
+   connect(p_operators->pattern_buttons,&QButtonGroup::idClicked
+           ,[this](const int id){ placeOperator(p_operators->patterns[id]
+           , columnMarker); });
    // 'change row' button
-   connect(p_operators->changeRow,&QPushButton::clicked,this
-           ,&AlgorithmLattice::changeRow);
+   connect(p_operators->changeRow,&QPushButton::clicked
+           ,[this](){ changeRow(rowMarker); });
 
    p_operators->show();
 }
 
 // private
-void AlgorithmLattice::changeRow() {
+void AlgorithmLattice::changeRow(unsigned int * ptr_Row) {
+//   *ptr_Row= 1;
    p_operators->setModal(true);
 }
 
-void AlgorithmLattice::measurementsID(int id) {
-   QString measurement= p_operators->measurements[id];
-   auto signXYZ= new SignMeasure(measurement);
+void AlgorithmLattice::placeOperator(QString sign, unsigned int * ptr_Column) {
+   // format sign's lattice marker
+   p_operatorType= new SignMeasure(sign);
 
-   signXYZ->mapToParent(-150, -150);
-   addItem(signXYZ);
-
-   p_operators->setModal(true);
-}
-
-void AlgorithmLattice::patternsID(int id) {
-   QString pattern= p_operators->patterns[id];
-   placeOperator(pattern);
-}
-
-void AlgorithmLattice::placeOperator(QString sign) {
-   // format the sign's lattice marker
-   p_operatorType= new QGraphicsSimpleTextItem;
-   p_operatorType->setPen(QPen(Qt::blue));
-   p_operatorType->setFont(QFont("Times New Roman", 24));
-   p_operatorType->setText(sign);
-
-   p_operatorType->mapToParent(-150,-150);
+   // (set)Pos = parent coordinates else, scene coordinates
+   if (items().isEmpty())
+      p_operatorType->setPos(nodeAddress[0][0]);
+   else if (!items().isEmpty())
+      p_operatorType->setPos(nodeAddress[*rowMarker][*ptr_Column]);
    addItem(p_operatorType);
+   *ptr_Column += 1;
+//   qDebug() << p_operatorType->pos() << ", " << latticeDims;
 
    p_operators->setModal(true);
 }
