@@ -1,5 +1,5 @@
-#ifndef TUQ_SIMULATORSCENE_HPP
-#define TUQ_SIMULATORSCENE_HPP
+#ifndef TUQ_ALGORITHMLATTICE_HPP
+#define TUQ_ALGORITHMLATTICE_HPP
 
 #include "operatorpalette.hpp"
 #include "signmeasure.hpp"
@@ -30,4 +30,4 @@ public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
 };
 
-#endif //TUQ_SIMULATORSCENE_HPP
+#endif //TUQ_ALGORITHMLATTICE_HPP
