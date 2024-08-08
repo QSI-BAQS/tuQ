@@ -4,8 +4,11 @@
 
 #include "operatorpalette.hpp"
 
+#include <QFormLayout>
 #include <QGridLayout>
+#include <QLabel>
 #include <QSpacerItem>
+
 
 // prototype:
 QPushButton * h_createOperatorButton(const QString &);
@@ -15,6 +18,7 @@ OperatorPalette::OperatorPalette(QWidget * parent) : QDialog(parent)
 {
    createMeasurementsGroupBox();
    createPatternsGroupBox();
+   createRowsGroupBox();
 
    auto * dialogLayout= new QVBoxLayout;
    auto * dialogSpacer= new QSpacerItem(1,15);
@@ -22,13 +26,8 @@ OperatorPalette::OperatorPalette(QWidget * parent) : QDialog(parent)
    dialogLayout->addWidget(p_measurements_groupBox);
    dialogLayout->addSpacerItem(dialogSpacer);
    dialogLayout->addWidget(p_patterns_groupBox);
-
-   // add changeRow to OperatorPalette
    dialogLayout->addSpacerItem(dialogSpacer);
-   auto * p_changerowGridLayout= new QGridLayout;
-   changeRow= h_createOperatorButton("change row");
-   p_changerowGridLayout->addWidget(changeRow, 0, 0, 1, 3);
-   dialogLayout->addWidget(changeRow);
+   dialogLayout->addWidget(p_rows_groupBox);
 
    setLayout(dialogLayout);
 }
@@ -64,9 +63,9 @@ void OperatorPalette::createPatternsGroupBox() {
       QPushButton * pattern_button= h_createOperatorButton(patterns[i]);
       pattern_buttons->addButton(pattern_button,i);
 
-      if (i == 7)
+      if (i == 6)
          // 'T' pattern
-         p_patternsGridLayout->addWidget(pattern_button, 2, 2, 1, 1);
+         p_patternsGridLayout->addWidget(pattern_button, 2, 1, 1, 1);
       else {
          if (i > 0){
             if ((i % 3) == 0){
@@ -83,6 +82,25 @@ void OperatorPalette::createPatternsGroupBox() {
       }
    }
    p_patterns_groupBox->setLayout(p_patternsGridLayout);
+}
+
+void OperatorPalette::createRowsGroupBox() {
+   p_rows_groupBox= new QGroupBox(tr("row operations"));
+   p_rows_groupBox->setAlignment(Qt::AlignCenter);
+
+   auto * p_addRowFormLayout= new QFormLayout;
+
+   p_addRow= h_createOperatorButton("add row");
+   p_addRowFormLayout->addWidget(p_addRow);
+
+   auto * changeRowLabel= new QLabel;
+   changeRowLabel->setStyleSheet("QLabel { color: blue; }");
+   changeRowLabel->setText("switch rows");
+   possibleRows= new QComboBox;
+   possibleRows->insertItem(0,"0");
+   p_addRowFormLayout->addRow(changeRowLabel, possibleRows);
+
+   p_rows_groupBox->setLayout(p_addRowFormLayout);
 }
 
 // helpers
