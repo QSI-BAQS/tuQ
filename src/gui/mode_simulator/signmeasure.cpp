@@ -7,13 +7,7 @@
 
 // public:
 SignMeasure::SignMeasure(QString & sign_measure, QGraphicsItem * parent)
-   : basis(sign_measure) {/*
-   // properties of the operator
-   setFlag(QGraphicsItem::ItemIsFocusable);
-   setFlag(QGraphicsItem::ItemIsMovable);
-   setFlag(QGraphicsItem::ItemIsSelectable);
-   setFlag(QGraphicsItem::ItemSendsScenePositionChanges);*/
-}
+   : basis(sign_measure) {}
 
 QRectF SignMeasure::boundingRect() const {
    return {-22,-15,152,56};
@@ -28,7 +22,12 @@ void SignMeasure::paint(QPainter * painter
    // measurement tile
    painter->setPen(QPen(Qt::black,2));
    painter->setBrush(Qt::white);
-   painter->drawEllipse(boundingRect());
+
+   if (basis == "CNOT")
+      painter->drawRoundedRect(-22,-15,152,135,15,15);
+   else
+      painter->drawEllipse(boundingRect());
+
    // operator key
    painter->setPen(QPen(Qt::blue,18));
    painter->setFont(QFont("Times New Roman",24));
