@@ -3,6 +3,7 @@
 //
 
 #include "algorithmlattice.hpp"
+#include "simulator_helpers.hpp"
 //#include <QDebug>
 
 // public
@@ -21,17 +22,33 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
    connect(p_operators->pattern_buttons,&QButtonGroup::idClicked
            ,[this](const int id){ placeOperator(p_operators->patterns[id]
            , columnMarker); });
-   // 'change row' button
-   connect(p_operators->changeRow,&QPushButton::clicked
-           ,[this](){ changeRow(rowMarker); });
+   // 'add row' button
+   connect(p_operators->p_addRow, &QPushButton::clicked
+           ,[this](){ addRow(0); });
+   // 'switch rows' form
+   connect(p_operators->possibleRows
+           ,QOverload<int>::of(&QComboBox::highlighted)
+           ,[this](int index){ *rowMarker= index; });   // this needs a function: [...][column] is wrong
 
    p_operators->show();
 }
 
 // private
-void AlgorithmLattice::changeRow(unsigned int * ptr_Row) {
-//   *ptr_Row= 1;
-   p_operators->setModal(true);
+void AlgorithmLattice::addRow(unsigned int columnStart) {
+   *maxRowMarker += 1;
+
+   // update the QComboBox, 'switch rows'
+   auto rowID= (int) *maxRowMarker;
+   auto rowValue= QString::number(*maxRowMarker);
+   p_operators->possibleRows->insertItem(rowID,rowValue);
+   // reset row displayed in 'switch rows'
+   p_operators->possibleRows->setCurrentIndex(rowID);
+
+   // align nodeAddress[row][...] with added row
+   unsigned int nowRowMarker= *maxRowMarker;
+   *rowMarker= nowRowMarker;
+   // set nodeAddress[...][column] of added row
+   *columnMarker= columnStart;
 }
 
 void AlgorithmLattice::placeOperator(QString sign, unsigned int * ptr_Column) {
