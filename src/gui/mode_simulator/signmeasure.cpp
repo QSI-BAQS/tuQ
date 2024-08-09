@@ -24,7 +24,7 @@ void SignMeasure::paint(QPainter * painter
    painter->setBrush(Qt::white);
 
    if (basis == "CNOT")
-      painter->drawRoundedRect(-22,-15,152,135,15,15);
+      painter->drawRoundedRect(-22,-15,152,130,15,15);   // TO DO: doesn't always render completely
    else
       painter->drawEllipse(boundingRect());
 
