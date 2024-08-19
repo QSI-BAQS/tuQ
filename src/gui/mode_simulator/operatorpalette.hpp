@@ -1,13 +1,12 @@
 #ifndef TUQ_OPERATORPALETTE_HPP
 #define TUQ_OPERATORPALETTE_HPP
 
-//#include "simulator_helpers.hpp"
+#include "simulator_helpers.hpp"
 
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QDialog>
 #include <QGroupBox>
-#include <QPushButton>
 #include <QStringBuilder>
 
 
