@@ -3,11 +3,15 @@
 
 #include <QGraphicsSimpleTextItem>
 #include <QPainter>
+#include <QStringBuilder>
+
+// <QStringBuilder>
+#pragma once
 
 
 class SignMeasure : public QGraphicsSimpleTextItem
 {
-   QString basis {};
+   QString designate {};
 
 public:
    // QGraphicsSimpleTextItem::Type = 9
