@@ -4,12 +4,15 @@
 #include "algorithmlattice.hpp"
 
 #include <fstream>
+#include <QByteArray>
 #include <QGraphicsView>
 
 
 class SimulatorView : public QGraphicsView
 {
    AlgorithmLattice * s_scene;
+   QByteArray s_algorithm;
+   QByteArray * const p_readAlgorithm= & s_algorithm;
 
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
