@@ -7,7 +7,8 @@
 
 // public:
 SimulatorView::SimulatorView(QWidget * parent)
-      : QGraphicsView(parent), s_scene(new AlgorithmLattice(this))
+      : QGraphicsView(parent), s_scene(new AlgorithmLattice(/*p_readAlgorithm
+                                                            ,*/ this))
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
    // *** ~[121, 121] accessible at this sceneRect ***
