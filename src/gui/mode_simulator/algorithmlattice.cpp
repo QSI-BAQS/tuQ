@@ -3,16 +3,21 @@
 //
 
 #include "algorithmlattice.hpp"
-#include "simulator_helpers.hpp"
 
 
 // public
-AlgorithmLattice::AlgorithmLattice(QWidget * parent)
-      : QGraphicsScene(parent)
+AlgorithmLattice::AlgorithmLattice(/*QByteArray * const pt_patterns
+                                   ,*/ QWidget * parent)
+      : QGraphicsScene(parent)//, localBuffer(pt_patterns)
 {
    setSceneRect(latticeDims);
 
    p_operators= new OperatorPalette();
+
+   p_initialiseRow= new SignMeasure(ket0);
+   p_initialiseRow->setPos(nodeAddress[0][0]);
+   addItem(p_initialiseRow);
+   columnAtRow[*rowMarker] += 1;
 
    // method by (p_operators) button id, excluding button 'add row'
    connect(p_operators->measurement_buttons,&QButtonGroup::idClicked
@@ -47,26 +52,36 @@ void AlgorithmLattice::addRow() {
    // align nodeAddress[row][...] with added row
    unsigned int nowRowMarker= *maxRowMarker;
    *rowMarker= nowRowMarker;
+
+   // initialise the new row
+   p_initialiseRow= new SignMeasure(ket0);
+   p_initialiseRow->setPos(nodeAddress[*rowMarker][0]);
+   addItem(p_initialiseRow);
+   columnAtRow[*rowMarker] += 1;
 }
 
 void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
    // format sign's lattice marker
    p_operatorType= new SignMeasure(sign);
-
+/*
+   // write sign to buffer
+   p_writeAlgorithm->open(QBuffer::WriteOnly);
+   p_writeAlgorithm->write(sign.toUtf8());
+   p_writeAlgorithm->close();
+*/
    // (set)Pos = parent coordinates else, scene coordinates
-   if (items().isEmpty())
-      p_operatorType->setPos(nodeAddress[0][0]);
-   else if (!items().isEmpty())
-      p_operatorType->setPos(nodeAddress[*rowMarker][column]);
-
-   addItem(p_operatorType);
-
+   p_operatorType->setPos(nodeAddress[*rowMarker][column]);
    // retain nodeAddress[...][column] of current row
    columnAtRow[*rowMarker] += 1;
 
-   // clear node at row beneath placed CNOT
-   if (sign == "CNOT")
+   // move this logic into a helper function, inc. rendering the control and
+   // target rows (p_writeAlgorithm) and text (signmeasure.cpp)
+   if (sign == "CNOT"){
+      // clear node at row beneath placed CNOT
       columnAtRow[*rowMarker + 1] += 1;
+   }
+
+   addItem(p_operatorType);
 
    p_operators->setModal(true);
 }

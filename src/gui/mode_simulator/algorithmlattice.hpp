@@ -4,6 +4,7 @@
 #include "operatorpalette.hpp"
 #include "signmeasure.hpp"
 
+#include <QBuffer>
 #include <QGraphicsScene>
 
 // <QGraphicsScene>
@@ -28,8 +29,15 @@ class AlgorithmLattice : public QGraphicsScene
    unsigned int nodeRow {0};
    unsigned int * rowMarker= & nodeRow;
 
+
+   QString ket0 {"0"};
+   SignMeasure * p_initialiseRow;
+
    OperatorPalette * p_operators;
    SignMeasure * p_operatorType;
+
+   QBuffer localBuffer;
+   QBuffer * p_writeAlgorithm= &localBuffer;
 
    void placeOperator(QString, unsigned int);
 
@@ -37,7 +45,7 @@ private slots:
    void addRow();
 
 public:
-   explicit AlgorithmLattice(QWidget * parent= nullptr);
+   explicit AlgorithmLattice(/*QByteArray * const,*/ QWidget * parent= nullptr);
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
