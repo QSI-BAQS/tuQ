@@ -10,12 +10,10 @@
 #include <QSpacerItem>
 
 
-// prototype:
-QPushButton * h_createOperatorButton(const QString &);
-
 // public:
 OperatorPalette::OperatorPalette(QWidget * parent) : QDialog(parent)
 {
+   // TO DO: position of palette interferes with rendering CNOT
    createMeasurementsGroupBox();
    createPatternsGroupBox();
    createRowsGroupBox();
@@ -101,20 +99,4 @@ void OperatorPalette::createRowsGroupBox() {
    p_addRowFormLayout->addRow(changeRowLabel, possibleRows);
 
    p_rows_groupBox->setLayout(p_addRowFormLayout);
-}
-
-// helpers
-QPushButton * h_createOperatorButton(const QString & marker) {
-   auto * clusterOperator= new QPushButton;
-   // button text and formatting
-   clusterOperator->setStyleSheet("QPushButton { color: blue; }");
-
-   QFont buttonFont= clusterOperator->font();
-   buttonFont.setFamily("Times New Roman");
-   buttonFont.setPointSize(18);
-
-   clusterOperator->setFont(buttonFont);
-   clusterOperator->setText(marker);
-
-   return clusterOperator;
 }
