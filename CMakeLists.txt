@@ -24,6 +24,7 @@ add_executable(tuQ src/main.cpp
       src/gui/mode_simulator/algorithmlattice.cpp
       src/gui/mode_simulator/operatorpalette.cpp
       src/gui/mode_simulator/signmeasure.cpp
+      src/gui/mode_simulator/simulator_helpers.cpp
       src/gui/mode_simulator/simulatorview.cpp
       src/layout/gates_lattice_set.cpp
       src/layout/io_circuit.cpp
