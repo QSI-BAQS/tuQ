@@ -6,18 +6,20 @@
 
 
 // public
-AlgorithmLattice::AlgorithmLattice(/*QByteArray * const pt_patterns
-                                   ,*/ QWidget * parent)
-      : QGraphicsScene(parent)//, localBuffer(pt_patterns)
+AlgorithmLattice::AlgorithmLattice(QWidget * parent)
+      : QGraphicsScene(parent)
 {
    setSceneRect(latticeDims);
 
+   p_operatorType= nullptr;
    p_operators= new OperatorPalette();
 
    p_initialiseRow= new SignMeasure(ket0);
    p_initialiseRow->setPos(nodeAddress[0][0]);
    addItem(p_initialiseRow);
+
    columnAtRow[*rowMarker] += 1;
+   lastInsert= nodeAddress[0][0];
 
    // method by (p_operators) button id, excluding button 'add row'
    connect(p_operators->measurement_buttons,&QButtonGroup::idClicked
@@ -28,8 +30,9 @@ AlgorithmLattice::AlgorithmLattice(/*QByteArray * const pt_patterns
            ,[this](const int id){ placeOperator(p_operators->patterns[id]
            , columnAtRow[*rowMarker]); });
    // 'add row' button
-   connect(p_operators->p_addRow, &QPushButton::clicked, this
-           , &AlgorithmLattice::addRow);
+   connect(p_operators->p_addRow, &QPushButton::clicked, [this](){
+      prepareRow();
+      columnAtRow[*rowMarker] += 1; });
    // 'switch rows' form
    connect(p_operators->possibleRows
            ,QOverload<int>::of(&QComboBox::highlighted)
@@ -39,7 +42,70 @@ AlgorithmLattice::AlgorithmLattice(/*QByteArray * const pt_patterns
 }
 
 // private
-void AlgorithmLattice::addRow() {
+void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
+//   instantiate and place graph operators at (simulator_helpers) nodeAddress
+//   coordinates
+//   pre-condition: user clicks any of the 'measurement bases' or 'measurement
+//   patterns' buttons
+//   post-condition: traversable linked list of 1+ SignMeasure objects
+
+   // format the lattice marker of argument 'sign'
+   p_operatorType= new SignMeasure(sign);
+
+   // TO DO: finesse for addRow operations
+   // linked list of SignMeasure objects
+   if (itemAt(lastInsert,QTransform())){
+      QGraphicsItem * p_operatorAtLastInsert= itemAt(lastInsert,QTransform());
+      SignMeasure * p_lastOperator=
+            qgraphicsitem_cast<SignMeasure *>(p_operatorAtLastInsert);
+      p_operatorType->p_CZ= p_lastOperator;
+   }
+
+   // place the operator
+      // operator, CNOT t upwards arrow
+   if (sign == "CNOT t" % QChar(0x2191)){
+      if (*rowMarker > 0){
+         unsigned int rowCNOTUpwardsArrow= *rowMarker - 1;
+
+         // (set)Pos = parent coordinates else, scene coordinates
+         p_operatorType->setPos(nodeAddress[rowCNOTUpwardsArrow][column]);
+         columnAtRow[rowCNOTUpwardsArrow] += 1;
+         columnAtRow[*rowMarker] += 1;
+
+         lastInsert= nodeAddress[rowCNOTUpwardsArrow][column];
+      }
+      else
+         // CNOT t upwards arrow does not insert a row!!
+         return;
+   }
+   else {   // all other operators
+      p_operatorType->setPos(nodeAddress[*rowMarker][column]);
+      // retain nodeAddress[...][column] of current row
+      columnAtRow[*rowMarker] += 1;
+
+      lastInsert= nodeAddress[*rowMarker][column];
+   }
+
+   // condition = CNOT t downwards arrow
+   if (sign == "CNOT t" % QChar(0x2193)){
+      unsigned int controlRowColumn= columnAtRow[*rowMarker];
+      prepareRow();   // TO DO: tweak to allow third CNOT of swap proxy
+      columnAtRow[*rowMarker]= controlRowColumn;
+   }
+
+   addItem(p_operatorType);
+
+   p_operators->setModal(true);
+}
+
+void AlgorithmLattice::prepareRow() {
+//   meet requirements common to addRow() and placeOperator() to prepare a
+//   matrix row
+//   pre-condition: either
+//      - user clicks OperatorPalette button, 'Add Row'; OR
+//      - user clicks OperatorPalette button, 'CNOT t downwards arrow',
+//   but not both.
+//   post-condition: N/A
    *maxRowMarker += 1;
 
    // update the QComboBox, 'switch rows'
@@ -57,32 +123,4 @@ void AlgorithmLattice::addRow() {
    p_initialiseRow= new SignMeasure(ket0);
    p_initialiseRow->setPos(nodeAddress[*rowMarker][0]);
    addItem(p_initialiseRow);
-   columnAtRow[*rowMarker] += 1;
 }
-
-void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
-   // format sign's lattice marker
-   p_operatorType= new SignMeasure(sign);
-/*
-   // write sign to buffer
-   p_writeAlgorithm->open(QBuffer::WriteOnly);
-   p_writeAlgorithm->write(sign.toUtf8());
-   p_writeAlgorithm->close();
-*/
-   // (set)Pos = parent coordinates else, scene coordinates
-   p_operatorType->setPos(nodeAddress[*rowMarker][column]);
-   // retain nodeAddress[...][column] of current row
-   columnAtRow[*rowMarker] += 1;
-
-   // move this logic into a helper function, inc. rendering the control and
-   // target rows (p_writeAlgorithm) and text (signmeasure.cpp)
-   if (sign == "CNOT"){
-      // clear node at row beneath placed CNOT
-      columnAtRow[*rowMarker + 1] += 1;
-   }
-
-   addItem(p_operatorType);
-
-   p_operators->setModal(true);
-}
-
