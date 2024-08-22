@@ -13,7 +13,6 @@
 // public:
 OperatorPalette::OperatorPalette(QWidget * parent) : QDialog(parent)
 {
-   // TO DO: position of palette interferes with rendering CNOT
    createMeasurementsGroupBox();
    createPatternsGroupBox();
    createRowsGroupBox();
@@ -61,23 +60,18 @@ void OperatorPalette::createPatternsGroupBox() {
       QPushButton * pattern_button= h_createOperatorButton(patterns[i]);
       pattern_buttons->addButton(pattern_button,i);
 
-      if (i == 6)
-         // 'T' pattern
-         p_patternsGridLayout->addWidget(pattern_button, 2, 1, 1, 1);
-      else {
-         if (i > 0){
-            if ((i % 3) == 0){
-               row += 1;
-               column= 0;
-            }
-            else if ((i % 3) == 1)
-               column= 1;
-            else
-               column= 2;
+      if (i > 0){
+         if ((i % 3) == 0){
+            row += 1;
+            column= 0;
          }
-
-         p_patternsGridLayout->addWidget(pattern_button, row, column, 1, 1);
+         else if ((i % 3) == 1)
+            column= 1;
+         else
+            column= 2;
       }
+
+      p_patternsGridLayout->addWidget(pattern_button, row, column, 1, 1);
    }
    p_patterns_groupBox->setLayout(p_patternsGridLayout);
 }
