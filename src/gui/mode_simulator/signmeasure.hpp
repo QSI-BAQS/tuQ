@@ -13,14 +13,14 @@ class SignMeasure : public QGraphicsItem
 {
    QString designate {};
 
-   // SignMeasure::Type = 65537
-   enum { Type= UserType + 1 };
-
    const QPen designatePen {Qt::blue, 18};
    const QRectF patternRect {-22,-15,152,56};
 
 public:
    explicit SignMeasure(QString &);
+
+   // SignMeasure::Type = 65537
+   enum { Type= UserType + 1 };
 
    // proxy for CZ gate on adjacent operators
    SignMeasure * p_CZ= nullptr;
