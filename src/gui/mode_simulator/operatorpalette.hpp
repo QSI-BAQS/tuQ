@@ -13,7 +13,7 @@
 class OperatorPalette : public QDialog
 {
    const static unsigned short measurements_nr {3};
-   const static unsigned short pattern_nr {7};
+   const static unsigned short pattern_nr {8};
 
    QGroupBox * p_measurements_groupBox= nullptr;
    QGroupBox * p_patterns_groupBox= nullptr;
@@ -26,11 +26,17 @@ class OperatorPalette : public QDialog
 public:
    explicit OperatorPalette(QWidget * parent= nullptr);
 
-   const QChar sigma {0x03C3};   // UTF-16: lower-case sigma
-   const QString measurements[measurements_nr] {sigma % " x",sigma % " y",sigma % " z"};
+   // UTF-16 hexes
+   const QChar downArrow {0x2193};   // 'downwards arrow'
+   const QChar slSigma {0x03C3};   // 'Greek small letter slSigma'
+   const QChar upArrow {0x2191};   // 'upwards arrow'
+
+   const QString measurements[measurements_nr] {slSigma % " x", slSigma % " y"
+                                                , slSigma % " z"};
 
    const QString patterns[pattern_nr] {"X-rotation","Y-rotation","Z-rotation"
-                                       ,"Hadamard","S","CNOT","T"};
+                                       ,"Hadamard","S", "T", "CNOT t" % upArrow
+                                       , "CNOT t" % downArrow};
 
    QButtonGroup * measurement_buttons;
    QButtonGroup * pattern_buttons;
