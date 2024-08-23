@@ -27,13 +27,15 @@ class AlgorithmLattice : public QGraphicsScene
    unsigned int * rowMarker= & nodeRow;
 
    QString ket0 {"0"};
+   SignMeasure * p_initialise00;
    SignMeasure * p_initialiseRow;
 
    OperatorPalette * p_operators;
    SignMeasure * p_operatorType;
 
    void placeOperator(QString, unsigned int);
-   void prepareRow();
+   void prepareOperator(SignMeasure &, unsigned int, unsigned int);
+   void addRow();
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
