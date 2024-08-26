@@ -22,14 +22,11 @@ public:
    // SignMeasure::Type = 65537
    enum { Type= UserType + 1 };
 
-   // proxy for CZ gate on adjacent operators
-   SignMeasure * p_CZ= nullptr;
-
-   QRectF boundingRect() const override { return patternRect; };
-   QString showOperator() { return designate; };
+   [[nodiscard]] QRectF boundingRect() const override { return patternRect; };
    void paint(QPainter *, const QStyleOptionGraphicsItem *
               , QWidget *) override;
-   int type() const override { return Type; };
+   QString showOperator() { return designate; };
+   [[nodiscard]] int type() const override { return Type; };
 };
 
 #endif //TUQ_SIGNMEASURE_HPP
