@@ -19,7 +19,7 @@ void SignMeasure::paint(QPainter * painter
    painter->setPen(QPen {Qt::black,2});
    painter->setBrush(Qt::white);
 
-   if (designate == "0"){
+   if (designate == "0" || designate == "+"){
       // row-initialising ket, framing
       QRectF backdrop {-22,-15,56,56};
       painter->drawEllipse(backdrop);
