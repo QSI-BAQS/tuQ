@@ -47,7 +47,7 @@ void GraphSelect::createVerticalGroupBox() {
    buttons[2]->setText("Compiler");
 
    buttons[3]= new QPushButton(tr("Exit tuQ"));
-   buttons[3]->setStyleSheet("QPushButton {color: red;}");
+   buttons[3]->setStyleSheet("QPushButton { color: red; }");
    layout->addWidget(buttons[3]);
 
    verticalGroupBox->setLayout(layout);
