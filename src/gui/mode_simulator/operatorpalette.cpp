@@ -37,7 +37,7 @@ void OperatorPalette::createMeasurementsGroupBox() {
    auto * p_hboxLayout= new QHBoxLayout;
 
    measurement_buttons= new QButtonGroup;
-   for (int i= 0; i < measurements_nr; ++i) {
+   for (int i= 0; i < measurement_nr; ++i) {
       QPushButton * measurement_button= h_createOperatorButton(measurements[i]);
       measurement_buttons->addButton(measurement_button,i);
 
@@ -58,6 +58,10 @@ void OperatorPalette::createPatternsGroupBox() {
    unsigned short column {0};
    for (unsigned short i= 0; i < pattern_nr; ++i) {
       QPushButton * pattern_button= h_createOperatorButton(patterns[i]);
+      // formatting the 'readout' button
+      if (i == 8)
+         pattern_button->setStyleSheet("QPushButton { color: red; }");
+
       pattern_buttons->addButton(pattern_button,i);
 
       if (i > 0){
@@ -87,6 +91,7 @@ void OperatorPalette::createRowsGroupBox() {
 
    auto * changeRowLabel= new QLabel;
    changeRowLabel->setStyleSheet("QLabel { color: blue; }");
+   changeRowLabel->setFont(QFont{"Times New Roman", 14});
    changeRowLabel->setText("switch rows");
    possibleRows= new QComboBox;
    possibleRows->insertItem(0,"0");
