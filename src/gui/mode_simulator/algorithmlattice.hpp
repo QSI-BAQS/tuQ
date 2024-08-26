@@ -18,8 +18,6 @@ class AlgorithmLattice : public QGraphicsScene
    // to cap adds of tiles at 21 * 21, use this?
    unsigned int columnAtRow [21]= {0};
 
-   QPointF lastInsert {};
-
    unsigned int maxRow {0};
    unsigned int * maxRowMarker= & maxRow;
 
@@ -27,15 +25,15 @@ class AlgorithmLattice : public QGraphicsScene
    unsigned int * rowMarker= & nodeRow;
 
    QString ket0 {"0"};
-   SignMeasure * p_initialise00;
+   QString ketPlus {"+"};
    SignMeasure * p_initialiseRow;
 
    OperatorPalette * p_operators;
    SignMeasure * p_operatorType;
 
+   void addRow();
    void placeOperator(QString, unsigned int);
    void prepareOperator(SignMeasure &, unsigned int, unsigned int);
-   void addRow();
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
