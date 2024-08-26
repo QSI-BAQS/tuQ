@@ -12,8 +12,8 @@
 
 class OperatorPalette : public QDialog
 {
-   const static unsigned short measurements_nr {3};
-   const static unsigned short pattern_nr {8};
+   const static unsigned short measurement_nr {3};
+   const static unsigned short pattern_nr {9};
 
    QGroupBox * p_measurements_groupBox= nullptr;
    QGroupBox * p_patterns_groupBox= nullptr;
@@ -31,12 +31,12 @@ public:
    const QChar slSigma {0x03C3};   // 'Greek small letter slSigma'
    const QChar upArrow {0x2191};   // 'upwards arrow'
 
-   const QString measurements[measurements_nr] {slSigma % " x", slSigma % " y"
+   const QString measurements[measurement_nr] {slSigma % " x", slSigma % " y"
                                                 , slSigma % " z"};
 
    const QString patterns[pattern_nr] {"X-rotation","Y-rotation","Z-rotation"
                                        ,"Hadamard","S", "T", "CNOT t" % upArrow
-                                       , "CNOT t" % downArrow};
+                                       , "CNOT t" % downArrow, "readout"};
 
    QButtonGroup * measurement_buttons;
    QButtonGroup * pattern_buttons;
