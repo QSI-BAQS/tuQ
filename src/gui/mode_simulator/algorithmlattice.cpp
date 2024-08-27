@@ -3,7 +3,7 @@
 //
 
 #include "algorithmlattice.hpp"
-
+#include <QDebug>
 
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
@@ -73,24 +73,22 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
 //   coordinates
 //   pre-condition: user clicks any of the 'measurement bases' or 'measurement
 //   patterns' buttons
-//   post-condition: traversable linked list of 1+ SignMeasure objects
+//   post-condition: ordered, traversable path of 1+ SignMeasure objects
 
    // provision to identify previous, adjacent-by-column operator
    QGraphicsItem * signMeasureAtPreviousColumn= itemAt(
          nodeAddress[*rowMarker][column - 1], QTransform());
    auto * p_operatorAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
          signMeasureAtPreviousColumn);
-// signMeasureAtAdjacentRow; p_operatorAtAdjacentRow
-/* crashes tuQ
+// signMeasureAtAdjacentRow; p_operatorAtAdjacentRow ?
+
    // 'readout' operator marks the end of a row
-   if (p_operatorAtPreviousColumn->showOperator() == "readout")
+   if (p_operatorAtPreviousColumn->showOperator() == "+")
       return ;
-*/
+
    // format the lattice marker of argument 'sign'
-   if (sign == "readout"){
+   if (sign == "readout")
       p_operatorType= new SignMeasure(ketPlus);
-      prepareOperator(*p_operatorType, *rowMarker, column);
-   }
    else
       p_operatorType= new SignMeasure(sign);
 
@@ -110,7 +108,7 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
    else if (sign == "CNOT t" % QChar(0x2193)){   // operator, CNOT t downwards arrow
       unsigned int controlRowColumn= columnAtRow[*rowMarker];
 
-      // edge case: three consecutive CNOTs as Swap operator proxy
+      // edge case: three consecutive CNOTs as proxy for Swap gate
       if (p_operatorAtPreviousColumn->showOperator() == "CNOT t" % QChar(0x2191)){
          if (controlRowColumn > 2){
             prepareOperator(*p_operatorType, *rowMarker, column);
@@ -125,7 +123,7 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
          columnAtRow[*rowMarker]= controlRowColumn + 1;
       }
    }
-   else   // non-CNOT operators exc. 'readout'
+   else   // non-CNOT operators
       prepareOperator(*p_operatorType, *rowMarker, column);
 
    addItem(p_operatorType);
