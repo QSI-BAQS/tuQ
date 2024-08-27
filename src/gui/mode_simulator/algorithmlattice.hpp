@@ -12,7 +12,7 @@
 
 class AlgorithmLattice : public QGraphicsScene
 {
-   // 21 * 21 tiles
+   // encompass 21 * 21 tiles
    const QRectF latticeDims {-750,-500,4150,1580};
 
    // to cap adds of tiles at 21 * 21, use this?
@@ -26,6 +26,7 @@ class AlgorithmLattice : public QGraphicsScene
 
    QString ket0 {"0"};
    QString ketPlus {"+"};
+
    SignMeasure * p_initialiseRow;
 
    OperatorPalette * p_operators;
