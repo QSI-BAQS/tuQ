@@ -46,7 +46,12 @@ void AlgorithmLattice::addRow() {
 //      - user clicks OperatorPalette button, 'CNOT t downwards arrow',
 //   but not both.
 //   post-condition: N/A
-   *maxRowMarker += 1;
+
+   // cap, number of rows = 21
+   if (*maxRowMarker < 21)
+      *maxRowMarker += 1;
+   else
+      return ;
 
    // update the QComboBox, 'switch rows'
    auto rowID= (int) *maxRowMarker;
@@ -82,9 +87,18 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
          signMeasureAtPreviousColumn);
 // signMeasureAtAdjacentRow; p_operatorAtAdjacentRow ?
 
-   // 'readout' operator marks the end of a row
+   // caps on number of columns
+   // cap 1: 'readout' operator marks the end of this row
    if (p_operatorAtPreviousColumn->showOperator() == "+")
       return ;
+   // cap 2: number of columns = 21
+   if (column == 20){
+      p_endOfRow= new SignMeasure(ketPlus);
+      prepareOperator(*p_endOfRow,*rowMarker,column);
+      addItem(p_endOfRow);
+
+      return ;
+   }
 
    // format the lattice marker of argument 'sign'
    if (sign == "readout")
@@ -127,7 +141,6 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
       prepareOperator(*p_operatorType, *rowMarker, column);
 
    addItem(p_operatorType);
-   p_operators->setModal(true);
 }
 
 void AlgorithmLattice::prepareOperator(SignMeasure & graphOperator
