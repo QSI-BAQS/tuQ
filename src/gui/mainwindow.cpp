@@ -3,6 +3,7 @@
 //
 #include "mainwindow.hpp"
 
+#include <algorithm>
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QRegExpValidator>
@@ -17,7 +18,7 @@ MainWindow::MainWindow(QWidget * parent)
 
    settings= new GraphSelect();
    // tuQ settings, 'Modeller'
-   connect(settings->buttons[0],&QPushButton::clicked,this, &MainWindow::setModeller);
+   connect(settings->buttons[0],&QPushButton::clicked, this, &MainWindow::setModeller);
    // tuQ settings, 'Simulator'
    connect(settings->buttons[1],&QPushButton::clicked,this, &MainWindow::setSimulator);
    // tuQ settings, 'Compiler'
@@ -75,15 +76,20 @@ void MainWindow::createMenus() {
    fileMenu->addAction(a_saveAlgorithm);
 
    fileMenu->addSeparator();
-   fileMenu->addAction(tr("E&xit"), this, [this](){
+   fileMenu->addAction(tr("E&xit"), [this](){
       QWidget::close();
+      if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->s_scene->p_operators->close();
    }, tr("Ctrl+q"));
 
    editMenu= menuBar()->addMenu(tr("&Edit"));
    // TO DO: *** function; shortcut key(s) Ctrl + Z ***
-   //editMenu->addAction(tr("&Undo"));
-   editMenu->addAction(tr("Cle&ar Screen"), this, [this]() {
-      view_modeller->clear_scene();
+   //editMenu->addAction(tr("&Undo"));  [this](int index){ *rowMarker= index; }
+   editMenu->addAction(tr("Cle&ar Screen"), [this]() {
+      if (*p_view_setting == tuQ_mode::modeller)
+         view_modeller->clear_scene();
+      else if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->clear_scene();
       show();
    }, tr("Shift+0"));
 
@@ -92,7 +98,6 @@ void MainWindow::createMenus() {
    circuitMenu->addAction(a_compile);
 
    graphMenu= menuBar()->addMenu(tr("&Graph"));
-//   graphMenu->addAction(a_addGate);
    graphMenu->addAction(a_addLattice);
    graphMenu->addAction(a_simulate);
 }
@@ -121,8 +126,12 @@ void MainWindow::dialogSave(const QString * savefile) {
    // handle 'cancel' at Dialog box
    if (savefile->isEmpty())
       return ;
-   else
-      view_modeller->saveGraph(*savefile);
+   else {
+      if (*p_view_setting == tuQ_mode::modeller)
+         view_modeller->saveGraph(*savefile);
+      else if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->saveAlgorithm(*savefile, latticeColumnsAtRow);
+   }
 }
 
 void MainWindow::noSession() {
@@ -147,10 +156,6 @@ void  MainWindow::readCircuitDialog(const QString * circuitfile) {
 }
 
 void MainWindow::setActions() {
-/*   a_addGate= new QAction(tr("Add Ga&te"),this);
-   a_addGate->setShortcut(tr("Ctrl+t"));
-//   connect(a_addGate,&QAction::triggered,[this](){ gatesPalette(); });   // private method
-*/
    a_addLattice= new QAction(tr("A&dd Lattice"),this);
    a_addLattice->setShortcut(tr("Ctrl+l"));
    connect(a_addLattice,&QAction::triggered,[this](){ addLattice(); });
@@ -175,9 +180,9 @@ void MainWindow::setActions() {
            ,[this](){ readCircuitDialog(graphreadcircuit); });
 
    a_saveAlgorithm= new QAction(tr("Sa&ve Algorithm"),this);
-   a_saveAlgorithm->setShortcut(tr("Ctrl+Alt+s"));/*
+   a_saveAlgorithm->setShortcut(tr("Ctrl+Alt+s"));
    connect(a_saveAlgorithm,&QAction::triggered
-           ,[this](){ dialogSave(algorithmsavefile); });*/
+           ,[this](){ dialogSave(algorithmsavefile); });
 
    a_saveGraph= new QAction(tr("&Save Graph"),this);
    a_saveGraph->setShortcut(tr("Ctrl+s"));
@@ -191,7 +196,6 @@ void MainWindow::setActions() {
 
 void MainWindow::setCompiler() {
    // 'grey out' menu items
-//   a_addGate->setEnabled(false);
    a_addLattice->setEnabled(false);
    a_openGraph->setEnabled(false);
    a_readCircuit->setEnabled(false);
@@ -207,7 +211,6 @@ void MainWindow::setCompiler() {
 
 void MainWindow::setModeller() {
    // 'grey out' menu items
-//   a_addGate->setEnabled(false);
    a_compile->setEnabled(false);
    a_openAlgorithm->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
@@ -251,6 +254,10 @@ void MainWindow::setView() {
       view_simulator= new SimulatorView(this);
       view_simulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_simulator);
+
+      std::copy(view_simulator->s_scene->columnAtRow
+      , view_simulator->s_scene->columnAtRow + 21
+      , latticeColumnsAtRow);
 
       setWindowTitle(tr("tuQ: mode_simulator"));
    }
