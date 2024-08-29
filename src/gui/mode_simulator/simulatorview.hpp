@@ -9,13 +9,14 @@
 
 class SimulatorView : public QGraphicsView
 {
-   AlgorithmLattice * s_scene;
-
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
 
+   AlgorithmLattice * s_scene;
+
    void clear_scene() { s_scene->clear(); }
 //   void readCircuit(const QString &);
+   void saveAlgorithm(const QString &, const unsigned int (&)[21]);
 };
 
 #endif //TUQ_SIMULATORVIEW_HPP
