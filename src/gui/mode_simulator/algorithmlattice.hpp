@@ -15,9 +15,6 @@ class AlgorithmLattice : public QGraphicsScene
    // encompass 21 * 21 tiles
    const QRectF latticeDims {-750,-500,4150,1580};
 
-   // to cap adds of tiles at 21 * 21, use this?
-   unsigned int columnAtRow [21]= {0};
-
    unsigned int maxRow {0};
    unsigned int * maxRowMarker= & maxRow;
 
@@ -27,10 +24,11 @@ class AlgorithmLattice : public QGraphicsScene
    QString ket0 {"0"};
    QString ketPlus {"+"};
 
+   SignMeasure * p_endOfRow;
    SignMeasure * p_initialiseRow;
-
-   OperatorPalette * p_operators;
    SignMeasure * p_operatorType;
+
+
 
    void addRow();
    void placeOperator(QString, unsigned int);
@@ -38,6 +36,9 @@ class AlgorithmLattice : public QGraphicsScene
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
+
+   unsigned int columnAtRow [21]= {0};
+   OperatorPalette * p_operators;
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
