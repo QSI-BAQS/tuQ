@@ -36,8 +36,6 @@ class MainWindow : public QMainWindow
    QMenu * fileMenu {};
    QMenu * graphMenu {};
 
-   unsigned int latticeColumnsAtRow [21]= {0};
-
    void addLattice();
    void createMenus();
    void dialogOpen(const QString *);
