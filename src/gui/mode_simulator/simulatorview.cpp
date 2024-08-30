@@ -26,7 +26,7 @@ SimulatorView::SimulatorView(QWidget * parent)
 
 // write instructions, format .txt
 void SimulatorView::saveAlgorithm(const QString & wfile
-                                  , const unsigned int (&latticeColumnsAtRow)[21]) {
+                                , const unsigned int (&latticeColumnsAtRow)[21]) {
    QFile writefile(wfile);
 
    // save conditions: write-only, text
@@ -37,11 +37,28 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
    QTextStream write(&writefile);
 
-   for (unsigned int c : latticeColumnsAtRow) {
-      qDebug() << "I'll get back to you";
+   int arraySize= sizeof(latticeColumnsAtRow) / sizeof(unsigned int);
+   int implicitRow {0};
+   while (implicitRow < arraySize && latticeColumnsAtRow[implicitRow] != 0) {
+      unsigned int columns= latticeColumnsAtRow[implicitRow];
+
+      for (unsigned int c= 0; c < columns; ++c) {
+         QPointF pos= nodeAddress[implicitRow][c];
+         QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos,QTransform());
+         auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
+               p_itemAtColumn);
+         QString marker= p_operatorAtColumn->showOperator();
+
+         // write: tile type
+         write << marker << " "
+         // write: position, as x, y coordinates
+         << QString::number(pos.x()) << " " << QString::number(pos.y())
+         // write: newline
+         << "\n";
+      }
+      implicitRow += 1;
    }
-
+   writefile.flush();
+   writefile.close();
 }
-
-
 
