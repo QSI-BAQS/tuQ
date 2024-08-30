@@ -28,8 +28,6 @@ class AlgorithmLattice : public QGraphicsScene
    SignMeasure * p_initialiseRow;
    SignMeasure * p_operatorType;
 
-
-
    void addRow();
    void placeOperator(QString, unsigned int);
    void prepareOperator(SignMeasure &, unsigned int, unsigned int);
