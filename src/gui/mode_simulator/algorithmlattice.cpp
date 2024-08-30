@@ -3,7 +3,7 @@
 //
 
 #include "algorithmlattice.hpp"
-#include <QDebug>
+
 
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
