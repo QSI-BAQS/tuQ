@@ -84,7 +84,7 @@ void MainWindow::createMenus() {
 
    editMenu= menuBar()->addMenu(tr("&Edit"));
    // TO DO: *** function; shortcut key(s) Ctrl + Z ***
-   //editMenu->addAction(tr("&Undo"));  [this](int index){ *rowMarker= index; }
+   //editMenu->addAction(tr("&Undo"));
    editMenu->addAction(tr("Cle&ar Screen"), [this]() {
       if (*p_view_setting == tuQ_mode::modeller)
          view_modeller->clear_scene();
@@ -130,7 +130,8 @@ void MainWindow::dialogSave(const QString * savefile) {
       if (*p_view_setting == tuQ_mode::modeller)
          view_modeller->saveGraph(*savefile);
       else if (*p_view_setting == tuQ_mode::simulator)
-         view_simulator->saveAlgorithm(*savefile, latticeColumnsAtRow);
+         view_simulator->saveAlgorithm(*savefile
+                                       , view_simulator->s_scene->columnAtRow);
    }
 }
 
@@ -254,10 +255,6 @@ void MainWindow::setView() {
       view_simulator= new SimulatorView(this);
       view_simulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_simulator);
-
-      std::copy(view_simulator->s_scene->columnAtRow
-      , view_simulator->s_scene->columnAtRow + 21
-      , latticeColumnsAtRow);
 
       setWindowTitle(tr("tuQ: mode_simulator"));
    }
