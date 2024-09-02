@@ -9,12 +9,16 @@
 
 class SimulatorView : public QGraphicsView
 {
+   QString openSign {};
+   SignMeasure * tileType {};
+
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
 
    AlgorithmLattice * s_scene;
 
-   void clear_scene() { s_scene->clear(); }
+   void clear_scene() { s_scene->clear(); };
+   void openAlgorithm(const QString &);
 //   void readCircuit(const QString &);
    void saveAlgorithm(const QString &, const unsigned int (&)[21]);
 };
