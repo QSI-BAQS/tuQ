@@ -9,8 +9,6 @@
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
       : QGraphicsScene(parent)
 {
-   setSceneRect(latticeDims);
-
    p_operatorType= nullptr;
    p_operators= new OperatorPalette();
 
