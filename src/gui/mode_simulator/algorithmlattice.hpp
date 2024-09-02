@@ -12,9 +12,6 @@
 
 class AlgorithmLattice : public QGraphicsScene
 {
-   // encompass 21 * 21 tiles
-   const QRectF latticeDims {-750,-500,4150,1580};
-
    unsigned int maxRow {0};
    unsigned int * maxRowMarker= & maxRow;
 
@@ -29,7 +26,6 @@ class AlgorithmLattice : public QGraphicsScene
    SignMeasure * p_operatorType;
 
    void addRow();
-   void placeOperator(QString, unsigned int);
    void prepareOperator(SignMeasure &, unsigned int, unsigned int);
 
 public:
@@ -37,6 +33,8 @@ public:
 
    unsigned int columnAtRow [21]= {0};
    OperatorPalette * p_operators;
+
+   void placeOperator(QString, unsigned int);
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
