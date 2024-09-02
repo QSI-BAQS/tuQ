@@ -6,7 +6,7 @@
 
 #include <QDebug>
 #include <QFile>
-//#include <QScrollBar>
+#include <QScrollBar>
 #include <QTextStream>
 
 
@@ -14,11 +14,60 @@
 SimulatorView::SimulatorView(QWidget * parent)
       : QGraphicsView(parent), s_scene(new AlgorithmLattice(this))
 {
-   // '... one unit on the scene is represented by one pixel on the screen.'
-   // *** ~[121, 121] accessible at this sceneRect ***
-
+   // encompass 21 * 21 tiles
+   s_scene->setSceneRect(-760,-500,4150,1580);
    setScene(s_scene);
 
+   const qreal x= s_scene->sceneRect().x();
+   const qreal y= s_scene->sceneRect().y();
+
+   auto hbar= new QScrollBar(Qt::Horizontal, this);
+   setHorizontalScrollBar(hbar);
+   hbar->setSliderPosition((int) x - 25);
+
+   auto vbar= new QScrollBar(Qt::Vertical, this);
+   setVerticalScrollBar(vbar);
+   vbar->setSliderPosition((int) y - 25);
+}
+
+void SimulatorView::openAlgorithm(const QString & rfile) {
+   QFile loadfile(rfile);
+
+   // read conditions: read-only, text
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      qDebug() << " file is not open";
+      return;
+   }
+
+   QTextStream inStream(&loadfile);
+
+   // prepare view
+   clear_scene();
+
+   // place all tiles
+   QString tileData{inStream.readLine()};
+
+   while (!tileData.isNull()) {
+      QStringList tileSpecs= tileData.split(QChar(' '));
+      openSign= tileSpecs.at(0);
+      qDebug() << openSign;
+      int savedRow= tileSpecs.at(1).toInt();
+      qDebug() << "savedRow" << savedRow;
+      int savedCol= tileSpecs.at(2).toInt();
+qDebug() << "savedCol" << savedCol;/*
+      // reproduce tile
+      tileType= new SignMeasure(openSign);
+      tileType->setPos(nodeAddress[savedRow][savedCol]);
+
+      // populate counts of columns by row
+      s_scene->columnAtRow[savedRow] += 1;  // debug: s_scene->columnAtRow has same 1 0 0 0 0 problem as saveAlgorithm
+
+      s_scene->addItem(tileType);*/
+
+      tileData= inStream.readLine();
+   }/*
+   s_scene->p_operators= new OperatorPalette;
+   s_scene->p_operators->show();*/
 }
 
 // copy-and-paste from GraphView, requires <QDebug>
@@ -37,7 +86,7 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
    QTextStream write(&writefile);
 
-   int arraySize= sizeof(latticeColumnsAtRow) / sizeof(unsigned int);
+   int arraySize= sizeof(latticeColumnsAtRow) / sizeof(latticeColumnsAtRow[0]);
    int implicitRow {0};
    while (implicitRow < arraySize && latticeColumnsAtRow[implicitRow] != 0) {
       unsigned int columns= latticeColumnsAtRow[implicitRow];
@@ -51,8 +100,9 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
          // write: tile type
          write << marker << " "
-         // write: position, as x, y coordinates
-         << QString::number(pos.x()) << " " << QString::number(pos.y())
+         // write: row, column position, as x, y coordinates
+         << implicitRow << " " << c
+//         << QString::number(pos.x()) << " " << QString::number(pos.y())
          // write: newline
          << "\n";
       }
