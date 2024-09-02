@@ -88,8 +88,11 @@ void MainWindow::createMenus() {
    editMenu->addAction(tr("Cle&ar Screen"), [this]() {
       if (*p_view_setting == tuQ_mode::modeller)
          view_modeller->clear_scene();
-      else if (*p_view_setting == tuQ_mode::simulator)
-         view_simulator->clear_scene();
+      else if (*p_view_setting == tuQ_mode::simulator){
+         delete view_simulator;
+         setSimulator();
+      }
+
       show();
    }, tr("Shift+0"));
 
@@ -110,8 +113,12 @@ void MainWindow::dialogOpen(const QString * openfile) {
    // handle 'cancel' at Dialog box
    if (openfile->isEmpty())
       return ;
-   else
-      view_modeller->openGraph(*openfile);
+   else {
+      if (*p_view_setting == tuQ_mode::modeller)
+         view_modeller->openGraph(*openfile);
+      else if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->openAlgorithm(*openfile);
+   }
 }
 
 void MainWindow::dialogSave(const QString * savefile) {
@@ -166,9 +173,9 @@ void MainWindow::setActions() {
 //   connect(a_compile,&QAction::triggered,[this](){ compile(); });
 
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
-   a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));/*
+   a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
    connect(a_openAlgorithm,&QAction::triggered
-           ,[this](){ dialogOpen(algorithmopenfile); });*/
+           ,[this](){ dialogOpen(algorithmopenfile); });
 
    a_openGraph= new QAction(tr("&Open Graph"),this);
    a_openGraph->setShortcut(tr("Ctrl+o"));
