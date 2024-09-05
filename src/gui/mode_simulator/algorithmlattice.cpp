@@ -4,7 +4,6 @@
 
 #include "algorithmlattice.hpp"
 
-
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
       : QGraphicsScene(parent)
@@ -71,6 +70,13 @@ void AlgorithmLattice::addRow() {
    columnAtRow[*rowMarker] += 1;
 }
 
+void AlgorithmLattice::alignColumns(unsigned int control, unsigned int target) {
+   if (columnAtRow[control] < columnAtRow[target])
+      columnAtRow[control]= columnAtRow[target];
+   else if (columnAtRow[control] > columnAtRow[target])
+      columnAtRow[target]= columnAtRow[control];
+}
+
 void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
 //   instantiate and place graph operators at (simulator_helpers) nodeAddress
 //   coordinates
@@ -83,16 +89,32 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
          nodeAddress[*rowMarker][column - 1], QTransform());
    auto * p_operatorAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
          signMeasureAtPreviousColumn);
-// signMeasureAtAdjacentRow; p_operatorAtAdjacentRow ?
+
+   // edge case!
+   //             p_operatorAtPreviousColumn: catch nullptr arising from the
+   // previous operator being 'CNOT downwards arrow' and its control row not
+   // being (switch row) active
+   QString previousOperator {};
+   if (p_operatorAtPreviousColumn == nullptr){
+      QGraphicsItem * operatorAtRowMinusOnePreviousColumn= itemAt(
+            nodeAddress[*rowMarker - 1][column - 1], QTransform());
+      auto * p_cnotAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
+            operatorAtRowMinusOnePreviousColumn);
+
+      if (p_cnotAtPreviousColumn != nullptr)
+         previousOperator= p_cnotAtPreviousColumn->showOperator();
+   }
+   else
+      previousOperator= p_operatorAtPreviousColumn->showOperator();
 
    // caps on number of columns
    // cap 1: 'readout' operator marks the end of this row
-   if (p_operatorAtPreviousColumn->showOperator() == "+")
+   if (previousOperator == "+")
       return ;
    // cap 2: number of columns = 21
    if (column == 20){
       p_endOfRow= new SignMeasure(ketPlus);
-      prepareOperator(*p_endOfRow,*rowMarker,column);
+      prepareOperator(*p_endOfRow,*rowMarker, column);
       addItem(p_endOfRow);
 
       return ;
@@ -108,8 +130,11 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
    if (sign == "CNOT t" % QChar(0x2191)){   // operator, CNOT t upwards arrow
       if (*rowMarker > 0){
          unsigned int rowCNOTUpwardsArrow= *rowMarker - 1;
+         // level the columns
+         alignColumns(*rowMarker, rowCNOTUpwardsArrow);
 
-         prepareOperator(*p_operatorType,rowCNOTUpwardsArrow, column);
+         prepareOperator(*p_operatorType,rowCNOTUpwardsArrow
+                         , columnAtRow[rowCNOTUpwardsArrow]);
          // advance column count at adjacent, up row
          columnAtRow[*rowMarker] += 1;
       }
@@ -118,21 +143,29 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
          return ;
    }
    else if (sign == "CNOT t" % QChar(0x2193)){   // operator, CNOT t downwards arrow
-      unsigned int controlRowColumn= columnAtRow[*rowMarker];
-
-      // edge case: three consecutive CNOTs as proxy for Swap gate
-      if (p_operatorAtPreviousColumn->showOperator() == "CNOT t" % QChar(0x2191)){
-         if (controlRowColumn > 2){
+      // edge case!
+      //             three consecutive CNOTs as proxy for Swap gate
+      if (previousOperator == "CNOT t" % QChar(0x2191)){
+         if (column > 2){
             prepareOperator(*p_operatorType, *rowMarker, column);
+
             // align column counts of control and target rows
-            columnAtRow[*maxRowMarker]= controlRowColumn + 1;
+            columnAtRow[*maxRowMarker]= column + 1;
          }
       }
       else {
-         prepareOperator(*p_operatorType, *rowMarker, column);
-         addRow();
-         // align column counts of control and target rows
-         columnAtRow[*rowMarker]= controlRowColumn + 1;
+         unsigned int rowCNOTDownwardsArrow= *rowMarker + 1;
+         // level the columns
+         alignColumns(*rowMarker, rowCNOTDownwardsArrow);
+
+         prepareOperator(*p_operatorType, *rowMarker
+                         ,columnAtRow[rowCNOTDownwardsArrow]);
+
+         // IFF the target row does not exist, add a new row
+         if (maxRow == nodeRow)
+            addRow();
+         else   // edge case!  if addRow() has not fired, *rowmarker != target row
+            columnAtRow[*rowMarker + 1] += 1;
       }
    }
    else   // non-CNOT operators
