@@ -21,11 +21,12 @@ class AlgorithmLattice : public QGraphicsScene
    QString ket0 {"0"};
    QString ketPlus {"+"};
 
-   SignMeasure * p_endOfRow;
+   SignMeasure * p_endOfRow {};
    SignMeasure * p_initialiseRow;
    SignMeasure * p_operatorType;
 
    void addRow();
+   void placeOperator(QString, unsigned int);
    void prepareOperator(SignMeasure &, unsigned int, unsigned int);
 
 public:
@@ -34,7 +35,7 @@ public:
    unsigned int columnAtRow [21]= {0};
    OperatorPalette * p_operators;
 
-   void placeOperator(QString, unsigned int);
+   void alignColumns(unsigned int, unsigned int);
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
