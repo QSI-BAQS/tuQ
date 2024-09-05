@@ -32,7 +32,6 @@ SimulatorView::SimulatorView(QWidget * parent)
 
 void SimulatorView::openAlgorithm(const QString & rfile) {
    QFile loadfile(rfile);
-
    // read conditions: read-only, text
    if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
       qDebug() << " file is not open";
@@ -43,31 +42,44 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
    // prepare view
    clear_scene();
+   // reset columns counter
+   auto n= sizeof(s_scene->columnAtRow) / sizeof(s_scene->columnAtRow[0]);
+   memset(s_scene->columnAtRow, 0, n * s_scene->columnAtRow[0]);
 
    // place all tiles
+   int savedRow {};
+   int savedCol {};
    QString tileData{inStream.readLine()};
 
    while (!tileData.isNull()) {
       QStringList tileSpecs= tileData.split(QChar(' '));
-      openSign= tileSpecs.at(0);
-      qDebug() << openSign;
-      int savedRow= tileSpecs.at(1).toInt();
-      qDebug() << "savedRow" << savedRow;
-      int savedCol= tileSpecs.at(2).toInt();
-qDebug() << "savedCol" << savedCol;/*
+
+      if (tileSpecs.length() == 4){
+         openSign= tileSpecs.at(0) % " " % tileSpecs.at(1);
+         savedRow= tileSpecs.at(2).toInt();
+         savedCol= tileSpecs.at(3).toInt();
+      }
+      else {
+         openSign= tileSpecs.at(0);
+         savedRow= tileSpecs.at(1).toInt();
+         savedCol= tileSpecs.at(2).toInt();
+      }
+
       // reproduce tile
       tileType= new SignMeasure(openSign);
       tileType->setPos(nodeAddress[savedRow][savedCol]);
 
       // populate counts of columns by row
-      s_scene->columnAtRow[savedRow] += 1;  // debug: s_scene->columnAtRow has same 1 0 0 0 0 problem as saveAlgorithm
-
-      s_scene->addItem(tileType);*/
+      if (openSign.startsWith("CNOT t"))
+         s_scene->alignColumns(savedRow, savedRow + 1);
+      else
+         s_scene->columnAtRow[savedRow] += 1;
+//qDebug() << "columnAtRow[" << savedRow << "] =" << s_scene->columnAtRow[savedRow];
+      s_scene->addItem(tileType);
 
       tileData= inStream.readLine();
-   }/*
-   s_scene->p_operators= new OperatorPalette;
-   s_scene->p_operators->show();*/
+   }
+   loadfile.close();
 }
 
 // copy-and-paste from GraphView, requires <QDebug>
@@ -77,7 +89,6 @@ qDebug() << "savedCol" << savedCol;/*
 void SimulatorView::saveAlgorithm(const QString & wfile
                                 , const unsigned int (&latticeColumnsAtRow)[21]) {
    QFile writefile(wfile);
-
    // save conditions: write-only, text
    if (!writefile.open(QIODevice::WriteOnly | QIODevice::Text)){
       qDebug() << " file is not open";
