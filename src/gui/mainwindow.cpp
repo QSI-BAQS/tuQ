@@ -92,7 +92,6 @@ void MainWindow::createMenus() {
          delete view_simulator;
          setSimulator();
       }
-
       show();
    }, tr("Shift+0"));
 
