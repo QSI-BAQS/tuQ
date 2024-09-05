@@ -47,14 +47,14 @@ void GraphView::openGraph(const QString & rfile) {
    QString vertex_data{in_stream.readLine()};
 
    while (!vertex_data.isNull()) {
-      QStringList vertex_stats = vertex_data.split(QChar(' '));
+      QStringList vertex_stats= vertex_data.split(QChar(' '));
       // reproduce vertex
-      unsigned long vid = vertex_stats.at(0).toULong();
-      auto *v = new GraphVertex(vertexmenu, vid);
+      unsigned long vid= vertex_stats.at(0).toULong();
+      auto *v= new GraphVertex(vertexmenu, vid);
 
       // set vertex position
-      double x = vertex_stats.at(1).toDouble();
-      double y = vertex_stats.at(2).toDouble();
+      double x= vertex_stats.at(1).toDouble();
+      double y= vertex_stats.at(2).toDouble();
       v->setPos(x, y);
 
       // add vertex to scene
@@ -71,7 +71,7 @@ void GraphView::openGraph(const QString & rfile) {
          vbar->setSliderPosition((int) y - 25);
       }
 
-      vertex_data = in_stream.readLine();
+      vertex_data= in_stream.readLine();
    }
    // return pointer to beginning of in_stream
    in_stream.seek(0);
@@ -80,7 +80,7 @@ void GraphView::openGraph(const QString & rfile) {
    QString edges_data{in_stream.readLine()};
 
    while (!edges_data.isNull()) {
-      QStringList edge_stats = edges_data.split(QChar(' '));
+      QStringList edge_stats= edges_data.split(QChar(' '));
       // reproduce edge
       if (edge_stats.size() > 3) {
          // details of 'reference' vertex
@@ -124,7 +124,7 @@ void GraphView::openGraph(const QString & rfile) {
          }
       }
 
-      edges_data = in_stream.readLine();
+      edges_data= in_stream.readLine();
    }
 
    loadfile.close();
