@@ -26,6 +26,7 @@ class AlgorithmLattice : public QGraphicsScene
    SignMeasure * p_operatorType;
 
    void addRow();
+   void alignColumns(unsigned int, unsigned int);
    void placeOperator(QString, unsigned int);
    void prepareOperator(SignMeasure &, unsigned int, unsigned int);
 
@@ -34,8 +35,6 @@ public:
 
    unsigned int columnAtRow [21]= {0};
    OperatorPalette * p_operators;
-
-   void alignColumns(unsigned int, unsigned int);
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
