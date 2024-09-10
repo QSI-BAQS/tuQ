@@ -87,15 +87,13 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
    // provision to identify previous, adjacent-by-column operator
    QGraphicsItem * signMeasureAtPreviousColumn= itemAt(
          nodeAddress[*rowMarker][column - 1], QTransform());
-   auto * p_operatorAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
-         signMeasureAtPreviousColumn);
 
    // edge case!
-   //             p_operatorAtPreviousColumn: catch nullptr arising from the
+   //             signMeasureAtPreviousColumn: catch nullptr arising from the
    // previous operator being 'CNOT downwards arrow' and its control row not
    // being (switch row) active
    QString previousOperator {};
-   if (p_operatorAtPreviousColumn == nullptr){
+   if (signMeasureAtPreviousColumn == nullptr){
       QGraphicsItem * operatorAtRowMinusOnePreviousColumn= itemAt(
             nodeAddress[*rowMarker - 1][column - 1], QTransform());
       auto * p_cnotAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
@@ -104,8 +102,11 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
       if (p_cnotAtPreviousColumn != nullptr)
          previousOperator= p_cnotAtPreviousColumn->showOperator();
    }
-   else
+   else {
+      auto * p_operatorAtPreviousColumn= qgraphicsitem_cast<SignMeasure *>(
+            signMeasureAtPreviousColumn);
       previousOperator= p_operatorAtPreviousColumn->showOperator();
+   }
 
    // caps on number of columns
    // cap 1: 'readout' operator marks the end of this row
