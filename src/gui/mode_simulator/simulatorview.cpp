@@ -47,13 +47,16 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    memset(s_scene->columnAtRow, 0, n * s_scene->columnAtRow[0]);
 
    // place all tiles
-   int savedRow {};
-   int savedCol {};
+   int savedRow;
+   int lastRow= 0;
+   int savedCol;
+   int lastCol= 0;
    QString tileData{inStream.readLine()};
 
    while (!tileData.isNull()) {
       QStringList tileSpecs= tileData.split(QChar(' '));
 
+      // concatenate operators with white-spacing in name (e.g. 'sigma' 'x')
       if (tileSpecs.length() == 4){
          openSign= tileSpecs.at(0) % " " % tileSpecs.at(1);
          savedRow= tileSpecs.at(2).toInt();
@@ -65,20 +68,33 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
          savedCol= tileSpecs.at(2).toInt();
       }
 
-      // reproduce tile
-      tileType= new SignMeasure(openSign);
-      tileType->setPos(nodeAddress[savedRow][savedCol]);
+      // accumulate the columns count of each row (inc. dummy CNOT target)
+      if (savedCol > lastCol)
+         lastCol= savedCol;
+      if (lastCol > savedCol && lastRow < savedRow)
+         s_scene->columnAtRow[lastRow]= lastCol + 1;
+      if (savedRow > lastRow)
+         lastRow= savedRow;
 
-      // populate counts of columns by row
-      if (openSign.startsWith("CNOT t"))
-         s_scene->alignColumns(savedRow, savedRow + 1);
-      else
-         s_scene->columnAtRow[savedRow] += 1;
-//qDebug() << "columnAtRow[" << savedRow << "] =" << s_scene->columnAtRow[savedRow];
-      s_scene->addItem(tileType);
+      // specify tile but ignore marker for dummy CNOT target (see method,
+      // saveAlgorithm below)
+      if (openSign != "CNOT_marker") {
+         // reproduce tile
+         tileType = new SignMeasure(openSign);
+         tileType->setPos(nodeAddress[savedRow][savedCol]);
 
+         // update the QComboBox, 'switch rows'
+         if (openSign.startsWith("CNOT t")) {
+            auto rowValue = QString::number(savedRow + 1);
+            s_scene->p_operators->possibleRows->insertItem(savedRow + 1, rowValue);
+            // reset 'switch rows' display to the added row
+            s_scene->p_operators->possibleRows->setCurrentIndex(savedRow + 1);
+         }
+         s_scene->addItem(tileType);
+      }
       tileData= inStream.readLine();
    }
+   s_scene->columnAtRow[savedRow]= savedCol + 1;
    loadfile.close();
 }
 
@@ -99,27 +115,66 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
    int arraySize= sizeof(latticeColumnsAtRow) / sizeof(latticeColumnsAtRow[0]);
    int implicitRow {0};
-   while (implicitRow < arraySize && latticeColumnsAtRow[implicitRow] != 0) {
-      unsigned int columns= latticeColumnsAtRow[implicitRow];
+   unsigned int columns= latticeColumnsAtRow[implicitRow];
+   QString marker {};
 
+   while (implicitRow < arraySize && columns > 0) {
       for (unsigned int c= 0; c < columns; ++c) {
          QPointF pos= nodeAddress[implicitRow][c];
+
          QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos,QTransform());
-         auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
-               p_itemAtColumn);
-         QString marker= p_operatorAtColumn->showOperator();
+         if (p_itemAtColumn == nullptr){
+            // edge case!
+            //             p_itemAtColumn: catch nullptr arising from the
+            // required 'operator' being the target qbit of a CNOT at the row
+            // immediately adjacent to (implicit)row.  Compare this with
+            // similar logic of AlgorithmLattice::placeOperator for context
+            QGraphicsItem * p_operatorAtRowMinusOne=
+                  s_scene->itemAt(nodeAddress[implicitRow - 1][c], QTransform());
+            auto * p_cnotAtRowMinusOne= qgraphicsitem_cast<SignMeasure *>(
+                  p_operatorAtRowMinusOne);
+
+            if (p_cnotAtRowMinusOne != nullptr
+            && p_cnotAtRowMinusOne->showOperator().startsWith("CNOT t"))
+               marker= "CNOT_marker";
+
+            // otherwise,
+            //             introduce an x-basis measurement, as per Raussendorf
+            // and Briegel (2002) 'Computational Model Underlying The One-Way
+            // Quantum Computer'
+            if (marker.isEmpty())
+               marker= QChar(0x03C3) % " x";
+         }
+         else {
+            auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
+                  p_itemAtColumn);
+            // edge case!
+            //             it appears that QGraphicsScene::itemAt never
+            // actually points at NULL but rather the nullptr returned by it is
+            // from exception-handling of a check of memory address.  In
+            // effect, this means qgraphicsitem_cast will continue pointing at
+            // the last positive match until the next positive match replaces
+            // it, thereby creating a phantom operator. This conditional is a
+            // specific workaround to the problem and unavoidably repeats logic
+            // of the previous if ( == nullptr) conditional
+            if (p_operatorAtColumn->showOperator() == "0" && c > 0)
+               marker= QChar(0x03C3) % " x";
+            else
+               marker= p_operatorAtColumn->showOperator();
+         }
 
          // write: tile type
          write << marker << " "
          // write: row, column position, as x, y coordinates
          << implicitRow << " " << c
-//         << QString::number(pos.x()) << " " << QString::number(pos.y())
          // write: newline
          << "\n";
+
+         marker.clear();
       }
       implicitRow += 1;
+      columns= latticeColumnsAtRow[implicitRow];
    }
    writefile.flush();
    writefile.close();
 }
-
