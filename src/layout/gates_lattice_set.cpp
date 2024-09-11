@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-// prototype: drop for tuQ
+// prototype
 bool h_is_contiguous_cnot(std::vector<Gate_SE_SW *>, const nlohmann::json &, unsigned long);
 
 unsigned long cols_n(std::vector<Gate_SE_SW> & c_columns, const nlohmann::json & as_cols) {
@@ -99,7 +99,6 @@ unsigned long cols_n(std::vector<Gate_SE_SW> & c_columns, const nlohmann::json &
    return c_columns.back().sw_column + 1;
 }
 
-// drop for tuQ?
 bool non_adjacent_gate(const nlohmann::json & ionq_circuit) {
    // bool: detect any non-adjacent cnot/swap of input circuit in the ionQ json
    //     format, by which control and target wires are distance >= 2 apart
@@ -210,7 +209,6 @@ unsigned long rows_m(std::vector<Gate_SE_SW> & c_rows, const nlohmann::json & as
    return c_rows.back().se_row + 1;
 }
 
-// drop for tuQ?
 bool h_is_contiguous_cnot(std::vector<Gate_SE_SW *> cnot_path
                           , const nlohmann::json & cnot_control
                           , unsigned long indicative_left_edge) {
