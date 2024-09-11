@@ -17,10 +17,9 @@ public:
 
    AlgorithmLattice * s_scene;
 
-   void clear_scene() { s_scene->clear(); };
    void openAlgorithm(const QString &);
 //   void readCircuit(const QString &);
-   void saveAlgorithm(const QString &, const unsigned int (&)[21]);
+   void saveAlgorithm(const QString &, const unsigned long (&)[21]) const;
 };
 
 #endif //TUQ_SIMULATORVIEW_HPP
