@@ -58,7 +58,7 @@ void AlgorithmLattice::addRow() {
    p_operators->possibleRows->setCurrentIndex(rowID);
 
    // align nodeAddress[row][...] with added row
-   unsigned int nowRowMarker= *maxRowMarker;
+   unsigned long nowRowMarker= *maxRowMarker;
    *rowMarker= nowRowMarker;
 
    // initialise the new row
@@ -70,14 +70,15 @@ void AlgorithmLattice::addRow() {
    columnAtRow[*rowMarker] += 1;
 }
 
-void AlgorithmLattice::alignColumns(unsigned int control, unsigned int target) {
+void AlgorithmLattice::alignColumns(unsigned long control
+                                    , unsigned long target) {
    if (columnAtRow[control] < columnAtRow[target])
       columnAtRow[control]= columnAtRow[target];
    else if (columnAtRow[control] > columnAtRow[target])
       columnAtRow[target]= columnAtRow[control];
 }
 
-void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
+void AlgorithmLattice::placeOperator(QString sign, unsigned long column) {
 //   instantiate and place graph operators at (simulator_helpers) nodeAddress
 //   coordinates
 //   pre-condition: user clicks any of the 'measurement bases' or 'measurement
@@ -130,7 +131,7 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
    // place the operator
    if (sign == "CNOT t" % QChar(0x2191)){   // operator, CNOT t upwards arrow
       if (*rowMarker > 0){
-         unsigned int rowCNOTUpwardsArrow= *rowMarker - 1;
+         unsigned long rowCNOTUpwardsArrow= *rowMarker - 1;
          // level the columns
          alignColumns(*rowMarker, rowCNOTUpwardsArrow);
 
@@ -155,7 +156,7 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
          }
       }
       else {
-         unsigned int rowCNOTDownwardsArrow= *rowMarker + 1;
+         unsigned long rowCNOTDownwardsArrow= *rowMarker + 1;
          // level the columns
          alignColumns(*rowMarker, rowCNOTDownwardsArrow);
 
@@ -176,8 +177,8 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned int column) {
 }
 
 void AlgorithmLattice::prepareOperator(SignMeasure & graphOperator
-      , unsigned int row
-      , unsigned int column) {
+      , unsigned long row
+      , unsigned long column) {
 // meet placement requirements common to CNOT/non-CNOT operators
 // pre-condition: subsidiary to method, placeOperator()
 //   post-condition: N/A

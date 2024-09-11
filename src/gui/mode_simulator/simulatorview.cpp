@@ -41,7 +41,7 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    QTextStream inStream(&loadfile);
 
    // prepare view
-   clear_scene();
+   s_scene->clear();
    // reset columns counter
    auto n= sizeof(s_scene->columnAtRow) / sizeof(s_scene->columnAtRow[0]);
    memset(s_scene->columnAtRow, 0, n * s_scene->columnAtRow[0]);
@@ -103,7 +103,7 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
 // write instructions, format .txt
 void SimulatorView::saveAlgorithm(const QString & wfile
-                                , const unsigned int (&latticeColumnsAtRow)[21]) {
+                                , const unsigned long (&latticeColumnsAtRow)[21]) const {
    QFile writefile(wfile);
    // save conditions: write-only, text
    if (!writefile.open(QIODevice::WriteOnly | QIODevice::Text)){
