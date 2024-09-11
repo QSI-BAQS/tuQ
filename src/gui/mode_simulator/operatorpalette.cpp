@@ -37,7 +37,7 @@ void OperatorPalette::createMeasurementsGroupBox() {
    auto * p_hboxLayout= new QHBoxLayout;
 
    measurement_buttons= new QButtonGroup;
-   for (int i= 0; i < measurement_nr; ++i) {
+   for (unsigned short i= 0; i < measurement_nr; ++i) {
       QPushButton * measurement_button= h_createOperatorButton(measurements[i]);
       measurement_buttons->addButton(measurement_button,i);
 
