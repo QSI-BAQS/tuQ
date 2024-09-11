@@ -12,11 +12,11 @@
 
 class AlgorithmLattice : public QGraphicsScene
 {
-   unsigned int maxRow {0};
-   unsigned int * maxRowMarker= & maxRow;
+   unsigned long maxRow {0};
+   unsigned long * maxRowMarker= & maxRow;
 
-   unsigned int nodeRow {0};
-   unsigned int * rowMarker= & nodeRow;
+   unsigned long nodeRow {0};
+   unsigned long * rowMarker= & nodeRow;
 
    QString ket0 {"0"};
    QString ketPlus {"+"};
@@ -26,14 +26,14 @@ class AlgorithmLattice : public QGraphicsScene
    SignMeasure * p_operatorType;
 
    void addRow();
-   void alignColumns(unsigned int, unsigned int);
-   void placeOperator(QString, unsigned int);
-   void prepareOperator(SignMeasure &, unsigned int, unsigned int);
+   void alignColumns(unsigned long, unsigned long);
+   void placeOperator(QString, unsigned long);
+   void prepareOperator(SignMeasure &, unsigned long, unsigned long);
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
 
-   unsigned int columnAtRow [21]= {0};
+   unsigned long columnAtRow [21]= {0};
    OperatorPalette * p_operators;
 };
 
