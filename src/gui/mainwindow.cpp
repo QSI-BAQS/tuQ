@@ -146,9 +146,6 @@ void MainWindow::noSession() {
    this->close();
 }
 
-// TO DO: recut to support QAction readCircuit (Modeller.readCircuit
-//    , Compiler.readCircuit)
-//    + QMenu->addAction Simulator.readCircuit
 void  MainWindow::readCircuitDialog(const QString * circuitfile) {
    QString file_name= QFileDialog::getOpenFileName(this, tr("Read Circuit"),""
          ,tr("Json files (*.json)"));
@@ -158,8 +155,12 @@ void  MainWindow::readCircuitDialog(const QString * circuitfile) {
    // handle 'cancel' at Dialog box
    if (circuitfile->isEmpty())
       return ;
-   else
-      view_modeller->readCircuit(*circuitfile);
+   else {
+      if (*p_view_setting == tuQ_mode::modeller)
+         view_modeller->readCircuit(*circuitfile);
+      else if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->readCircuit(*circuitfile);
+   }
 }
 
 void MainWindow::setActions() {
