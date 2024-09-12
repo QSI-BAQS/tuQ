@@ -20,13 +20,11 @@ struct Gate_SE_SW {
    unsigned long sw_column {0};
 };
 
-
 // resource cluster references
 static std::vector<Gate_SE_SW> gate_by_address;
 
-// function prototypes
 unsigned long cols_n(std::vector<Gate_SE_SW> &, const nlohmann::json &);
-bool non_adjacent_gate(const nlohmann::json &);   // drop for tuQ?
+bool non_adjacent_gate(const nlohmann::json &);
 unsigned long rows_m(std::vector<Gate_SE_SW> &, const nlohmann::json &);
 
 #endif //TUQ_GATES_LATTICE_SET_HPP
