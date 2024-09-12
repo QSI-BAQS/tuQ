@@ -28,7 +28,7 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
       printf("\nprocess aborted: only \"cirq_type\" : \"LineQubit\" is accepted\n");
       exit (0);
    }
-   // *** tuQ: lift this restriction? ***
+
    bool non_adjacent_gate {false};
    unsigned long gate_moment_counter {0};
    // compliance check 2: only proximately adjacent gates
@@ -210,8 +210,7 @@ void h_check_non_adjacent_gate(const nlohmann::json & cirq_schema
 void h_check_qbit(const nlohmann::json & cirq_schema, bool & other_qbit
                   , unsigned long & qbits_count){
 //   void: helper function, confirm 'LineQubit' is the only qbit type in the
-//   cirq schema input as per Zapata function, 'parse_cirq_qubits'
-//   (https://github.com/QSI-BAQS/Jabalizer.jl/blob/main/src/cirq_io.jl)
+//   cirq schema input
    using json= nlohmann::json;
 
    json moments= cirq_schema.at("moments");
