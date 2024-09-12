@@ -30,6 +30,7 @@ SimulatorView::SimulatorView(QWidget * parent)
    vbar->setSliderPosition((int) y - 25);
 }
 
+// read instructions, format .txt
 void SimulatorView::openAlgorithm(const QString & rfile) {
    QFile loadfile(rfile);
    // read conditions: read-only, text
@@ -98,8 +99,42 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    loadfile.close();
 }
 
-// copy-and-paste from GraphView, requires <QDebug>
-//void SimulatorView::readCircuit(const QString & cjson);
+// read a quantum circuit file, format .json (schemas: 'native', which is
+// adapted from ionQ; and Google Cirq, which is reformatted to the native
+// schema). See comments of src/layout/io_circuit.cpp.
+void SimulatorView::readCircuit(const QString & cjson) {
+   // convert QString to utf8 string
+   std::string cjson_utf8= cjson.toUtf8().constData();
+   std::ifstream json_circuit {cjson_utf8};
+
+   if (json_circuit.is_open()){
+      using json= nlohmann::json;
+
+      json parse_circuit= json::parse(json_circuit);   // create json object
+      auto cirq_check= parse_circuit.find("cirq_type");
+
+      if (cirq_check != parse_circuit.end()){
+         // format of input circuit json: cirq
+         json ionq_schema= cirq_to_ionq_schema(parse_circuit);
+         etch_circuit= ionq_schema;
+      }
+         // format of input circuit json: ionQ
+      else {
+         if (non_adjacent_gate(parse_circuit))
+            qDebug() << "process aborted: non-adjacent gate in circuit";
+
+         etch_circuit= parse_circuit;
+      }
+
+      unsigned long cluster_state_rows= rows_m(gate_by_address, etch_circuit);
+      unsigned long cluster_state_columns= cols_n(gate_by_address
+            , etch_circuit);
+
+//      setLattice(cluster_state_rows, cluster_state_columns);
+   }
+   else
+      qDebug() << "That file is not opening";
+}
 
 // write instructions, format .txt
 void SimulatorView::saveAlgorithm(const QString & wfile

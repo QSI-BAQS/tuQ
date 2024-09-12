@@ -2,6 +2,8 @@
 #define TUQ_SIMULATORVIEW_HPP
 
 #include "algorithmlattice.hpp"
+#include "gates_lattice_set.hpp"
+#include "io_circuit.hpp"
 
 #include <fstream>
 #include <QGraphicsView>
@@ -18,7 +20,7 @@ public:
    AlgorithmLattice * s_scene;
 
    void openAlgorithm(const QString &);
-//   void readCircuit(const QString &);
+   void readCircuit(const QString &);
    void saveAlgorithm(const QString &, const unsigned long (&)[21]) const;
 };
 
