@@ -35,7 +35,6 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
    p_operators->show();
 }
 
-// private
 void AlgorithmLattice::addRow() {
 //   add a row in response to pre-conditions
 //   pre-condition: either
@@ -70,6 +69,8 @@ void AlgorithmLattice::addRow() {
    columnAtRow[*rowMarker] += 1;
 }
 
+
+// private
 void AlgorithmLattice::alignColumns(unsigned long control
                                     , unsigned long target) {
    if (columnAtRow[control] < columnAtRow[target])
