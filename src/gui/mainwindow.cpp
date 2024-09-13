@@ -146,20 +146,20 @@ void MainWindow::noSession() {
    this->close();
 }
 
-void  MainWindow::readCircuitDialog(const QString * circuitfile) {
+void  MainWindow::readCircuitDialog(const QString * circuitFile) {
    QString file_name= QFileDialog::getOpenFileName(this, tr("Read Circuit"),""
          ,tr("Json files (*.json)"));
 
-   circuitfile= &file_name;
+   circuitFile= &file_name;
 
    // handle 'cancel' at Dialog box
-   if (circuitfile->isEmpty())
+   if (circuitFile->isEmpty())
       return ;
    else {
       if (*p_view_setting == tuQ_mode::modeller)
-         view_modeller->readCircuit(*circuitfile);
+         view_modeller->readCircuit(*circuitFile);
       else if (*p_view_setting == tuQ_mode::simulator)
-         view_simulator->readCircuit(*circuitfile);
+         view_simulator->readCircuit(*circuitFile);
    }
 }
 
