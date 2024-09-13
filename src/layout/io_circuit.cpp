@@ -8,7 +8,7 @@ void h_check_non_adjacent_gate(const nlohmann::json &, bool &, unsigned long &);
 void h_check_qbit(const nlohmann::json &, bool &, unsigned long &);
 
 nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
-//   json: adapt cirq schema json to tuQ-accepted json (after ionQ schema),
+//   json: adapt cirq schema json to Etch-accepted json (after ionQ schema),
 //      https://docs.ionq.com/#section/JSON-Specification
 //   pre-condition:
 //      - json input is well-formed
@@ -20,7 +20,8 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
    using json= nlohmann::json;
 
    unsigned long qbits_count {0};
-   // compliance check 1
+   // compliance checks
+   // *** these restrictions may be removed at a future date ***
    bool other_qbit {false};
    // compliance check 1: 'LineQubit' is the only (json) [qubits] type
    h_check_qbit(cirq_circuit, other_qbit, qbits_count);
@@ -40,15 +41,15 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
    }
 
 
-   // adapt cirq- to tuQ-schema
+   // adapt cirq- to Etch-schema
    json ionq_schema;
    ionq_schema["qubits"]= qbits_count + 1;   // qbits_count + 1 -> (ionQ) "qubits"
    ionq_schema["circuit"]= json::array();
 
    json object_gate= json::object({
-      {"gate", ""}
-      ,{"control", json::array()}
-      ,{"target", 0}
+      {"gate",""}
+      ,{"control",json::array()}
+      ,{"target",0}
    });
 
    json moments= cirq_circuit.at("moments");
@@ -135,7 +136,7 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
                object_gate["gate"]= "s";
             else if (exponent == 1)
                object_gate["gate"]= "z";
-            else if (exponent > 0.0)
+            else
                object_gate["gate"]= "rz";
 
             object_gate["target"]= target;
@@ -198,7 +199,8 @@ void h_check_non_adjacent_gate(const nlohmann::json & cirq_schema
 void h_check_qbit(const nlohmann::json & cirq_schema, bool & other_qbit
                   , unsigned long & qbits_count){
 //   void: helper function, confirm 'LineQubit' is the only qbit type in the
-//   cirq schema input
+//   cirq schema input as per Zapata function, 'parse_cirq_qubits'
+//   (https://github.com/QSI-BAQS/Jabalizer.jl/blob/main/src/cirq_io.jl)
    using json= nlohmann::json;
 
    json moments= cirq_schema.at("moments");
