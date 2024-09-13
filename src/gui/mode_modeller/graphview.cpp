@@ -136,30 +136,31 @@ void GraphView::openGraph(const QString & rfile) {
 void GraphView::readCircuit(const QString & cjson) {
    // convert QString to utf8 string
    std::string cjson_utf8= cjson.toUtf8().constData();
-   std::ifstream json_circuit {cjson_utf8};
+   std::ifstream jsonCircuit {cjson_utf8};
 
-   if (json_circuit.is_open()){
+   if (jsonCircuit.is_open()){
       using json= nlohmann::json;
 
-      json parse_circuit= json::parse(json_circuit);   // create json object
-      auto cirq_check= parse_circuit.find("cirq_type");
+      json parseCircuit= json::parse(jsonCircuit);   // create json object
+      auto cirqCheck= parseCircuit.find("cirq_type");
 
-      if (cirq_check != parse_circuit.end()){
+      json circuitToGraph;
+      if (cirqCheck != parseCircuit.end()){
          // format of input circuit json: cirq
-         json ionq_schema= cirq_to_ionq_schema(parse_circuit);
-         etch_circuit= ionq_schema;
+         json ionq_schema= cirq_to_ionq_schema(parseCircuit);
+         circuitToGraph= ionq_schema;
       }
       // format of input circuit json: ionQ
       else {
-         if (non_adjacent_gate(parse_circuit))
+         if (non_adjacent_gate(parseCircuit))
             qDebug() << "process aborted: non-adjacent gate in circuit";
 
-         etch_circuit= parse_circuit;
+         circuitToGraph= parseCircuit;
       }
 
-      unsigned long cluster_state_rows= rows_m(gate_by_address, etch_circuit);
+      unsigned long cluster_state_rows= rows_m(gate_by_address, circuitToGraph);
       unsigned long cluster_state_columns= cols_n(gate_by_address
-            , etch_circuit);
+            , circuitToGraph);
 
       setLattice(cluster_state_rows, cluster_state_columns);
    }
