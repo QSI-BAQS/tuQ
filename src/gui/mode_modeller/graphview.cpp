@@ -130,7 +130,7 @@ void GraphView::openGraph(const QString & rfile) {
    loadfile.close();
 }
 
-// read a quantum circuit file, format .json (schemas: 'native', which is
+// read a quantum circuit file, format .json (schemata: 'native', which is
 // adapted from ionQ; and Google Cirq, which is reformatted to the native
 // schema). See comments of src/layout/io_circuit.cpp.
 void GraphView::readCircuit(const QString & cjson) {
