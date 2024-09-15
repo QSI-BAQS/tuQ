@@ -69,6 +69,19 @@ void AlgorithmLattice::addRow() {
    columnAtRow[*rowMarker] += 1;
 }
 
+void AlgorithmLattice::prepareOperator(SignMeasure & graphOperator
+      , unsigned long row
+      , unsigned long column) {
+// meet placement requirements common to CNOT/non-CNOT operators
+// pre-condition: subsidiary to method, placeOperator()
+//   post-condition: N/A
+
+   // (set)Pos = parent coordinates else, scene coordinates
+   graphOperator.setPos(nodeAddress[row][column]);
+   // retain nodeAddress[...][column] of current row
+   columnAtRow[row] += 1;
+}
+
 
 // private
 void AlgorithmLattice::alignColumns(unsigned long control
@@ -177,15 +190,3 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned long column) {
    addItem(p_operatorType);
 }
 
-void AlgorithmLattice::prepareOperator(SignMeasure & graphOperator
-      , unsigned long row
-      , unsigned long column) {
-// meet placement requirements common to CNOT/non-CNOT operators
-// pre-condition: subsidiary to method, placeOperator()
-//   post-condition: N/A
-
-   // (set)Pos = parent coordinates else, scene coordinates
-   graphOperator.setPos(nodeAddress[row][column]);
-   // retain nodeAddress[...][column] of current row
-   columnAtRow[row] += 1;
-}
