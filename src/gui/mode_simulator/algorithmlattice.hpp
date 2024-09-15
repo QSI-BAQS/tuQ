@@ -27,7 +27,6 @@ class AlgorithmLattice : public QGraphicsScene
 
    void alignColumns(unsigned long, unsigned long);
    void placeOperator(QString, unsigned long);
-   void prepareOperator(SignMeasure &, unsigned long, unsigned long);
 
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
@@ -36,6 +35,7 @@ public:
    OperatorPalette * p_operators;
 
    void addRow();
+   void prepareOperator(SignMeasure &, unsigned long, unsigned long);
 };
 
 #endif //TUQ_ALGORITHMLATTICE_HPP
