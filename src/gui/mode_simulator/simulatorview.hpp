@@ -12,7 +12,7 @@
 class SimulatorView : public QGraphicsView
 {
    QString openSign {};
-   SignMeasure * tileType {};
+   SignMeasure * p_tileType {};
 
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
