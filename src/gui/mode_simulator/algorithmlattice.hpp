@@ -18,9 +18,6 @@ class AlgorithmLattice : public QGraphicsScene
    unsigned long nodeRow {0};
    unsigned long * rowMarker= & nodeRow;
 
-   QString ket0 {"0"};
-   QString ketPlus {"+"};
-
    SignMeasure * p_endOfRow {};
    SignMeasure * p_initialiseRow;
    SignMeasure * p_operatorType;
@@ -32,6 +29,8 @@ public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
 
    unsigned long columnAtRow [21]= {0};
+   QString ket0 {"0"};
+   QString ketPlus {"+"};
    OperatorPalette * p_operators;
 
    void addRow();
