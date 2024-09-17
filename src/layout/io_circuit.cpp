@@ -9,7 +9,7 @@ void h_check_qbit(const nlohmann::json &, bool &, unsigned long &);
 
 nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
 //   json: adapt cirq schema json to Etch-accepted json (after ionQ schema),
-//      https://docs.ionq.com/#section/JSON-Specification
+//      https://docs.ionq.com/api-reference/v0.3/writing-quantum-programs
 //   pre-condition:
 //      - json input is well-formed
 //      - circuit gates configuration is up -> down, left -> right
@@ -87,13 +87,13 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
             // https://quantumai.google/cirq/build/gates#single_qubit_gates
             object_gate["gate"]= "s";
             object_gate["target"]= target;
-         }
+         }/*
          else if (gate_type == "SwapPowGate"){
             unsigned long swap_target= operation["qubits"][1]["x"].get<unsigned long>();
             object_gate["gate"]= "swap";
             // assigning 'target' to object_gate["control"] is not an error
             object_gate["control"].push_back(target);
-            object_gate["target"]= swap_target;
+            object_gate["target"]= swap_target;*/
          }
          else if (gate_type == "T"){
             // 'vanilla' T gate, Cf. 'ZPowGate' below; see
@@ -199,7 +199,7 @@ void h_check_non_adjacent_gate(const nlohmann::json & cirq_schema
 void h_check_qbit(const nlohmann::json & cirq_schema, bool & other_qbit
                   , unsigned long & qbits_count){
 //   void: helper function, confirm 'LineQubit' is the only qbit type in the
-//   cirq schema input as per Zapata function, 'parse_cirq_qubits'
+//   cirq schema input as per function, 'parse_cirq_qubits'
 //   (https://github.com/QSI-BAQS/Jabalizer.jl/blob/main/src/cirq_io.jl)
    using json= nlohmann::json;
 
