@@ -93,8 +93,8 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
             object_gate["gate"]= "swap";
             // assigning 'target' to object_gate["control"] is not an error
             object_gate["control"].push_back(target);
-            object_gate["target"]= swap_target;*/
-         }
+            object_gate["target"]= swap_target;
+         }*/
          else if (gate_type == "T"){
             // 'vanilla' T gate, Cf. 'ZPowGate' below; see
             // https://quantumai.google/cirq/build/gates#single_qubit_gates
