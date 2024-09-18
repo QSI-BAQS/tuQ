@@ -81,8 +81,8 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
       // saveAlgorithm below)
       if (openSign != "CNOT_marker") {
          // reproduce tile
-         tileType = new SignMeasure(openSign);
-         tileType->setPos(nodeAddress[savedRow][savedCol]);
+         p_tileType = new SignMeasure(openSign);
+         p_tileType->setPos(nodeAddress[savedRow][savedCol]);
 
          // update the QComboBox, 'switch rows'
          if (openSign.startsWith("CNOT t")) {
@@ -91,7 +91,7 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
             // reset 'switch rows' display to the added row
             s_scene->p_operators->possibleRows->setCurrentIndex(savedRow + 1);
          }
-         s_scene->addItem(tileType);
+         s_scene->addItem(p_tileType);
       }
       tileData= inStream.readLine();
    }
@@ -99,9 +99,10 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    loadfile.close();
 }
 
-// read a quantum circuit file, format .json (schemas: 'native', which is
+// read a quantum circuit file, format .json (schemata: 'native', which is
 // adapted from ionQ; and Google Cirq, which is reformatted to the native
 // schema). See comments of src/layout/io_circuit.cpp.
+// NOTE: readCircuit will only insert readout tiles at a row with 20 tiles.
 void SimulatorView::readCircuit(const QString & cjson) {
    // convert QString to utf8 string
    std::string cjson_utf8= cjson.toUtf8().constData();
@@ -113,24 +114,172 @@ void SimulatorView::readCircuit(const QString & cjson) {
       json parse_circuit= json::parse(json_circuit);   // create json object
       auto cirq_check= parse_circuit.find("cirq_type");
 
+      json circuitToTiles;
       if (cirq_check != parse_circuit.end()){
          // format of input circuit json: cirq
          json ionq_schema= cirq_to_ionq_schema(parse_circuit);
-         etch_circuit= ionq_schema;
+         circuitToTiles= ionq_schema;
       }
          // format of input circuit json: ionQ
       else {
          if (non_adjacent_gate(parse_circuit))
             qDebug() << "process aborted: non-adjacent gate in circuit";
 
-         etch_circuit= parse_circuit;
+         circuitToTiles= parse_circuit;
       }
 
-      unsigned long cluster_state_rows= rows_m(gate_by_address, etch_circuit);
-      unsigned long cluster_state_columns= cols_n(gate_by_address
-            , etch_circuit);
+      auto implicitRow= sizeof(s_scene->columnAtRow) / sizeof(s_scene->columnAtRow[0]);
+      // *** abort read: input circuit["moments"] exceeds the columns limit of
+      //    simulator ***
+      if (circuitToTiles["moments"] > implicitRow){
+         qDebug() << "process aborted: count of circuit columns exceeds the "
+                     "column limits of simulator";
+         return ;
+      }
 
-//      setLattice(cluster_state_rows, cluster_state_columns);
+      int qbits= circuitToTiles["qubits"];
+      // *** abort read: the count of circuit rows exceeds the rows limit of
+      //    simulator ***
+      if (qbits > implicitRow){
+         qDebug() << "process aborted: count of circuit rows exceeds the row "
+                     "limits of simulator";
+         return ;
+      }
+
+      // reset columns counter
+      memset(s_scene->columnAtRow, 0, implicitRow * s_scene->columnAtRow[0]);
+
+      // prepare view and initialise row 0
+      s_scene->clear();
+      p_tileType= new SignMeasure(s_scene->ket0);
+      p_tileType->setPos(nodeAddress[0][0]);
+      s_scene->addItem(p_tileType);
+
+      s_scene->columnAtRow[0] += 1;
+
+      // initialise rows 1+
+      if (qbits > 1){
+         for (int i= 0; i < (qbits - 1); ++i) {
+            s_scene->addRow();
+         }
+      }
+
+      // place the gates as mode_simulator tiles
+      for (auto & gtt : circuitToTiles["circuit"]) {
+         unsigned long row {};
+         unsigned long column;
+         unsigned long placingMoment= gtt["moment"];
+
+         if (gtt["gate"] == "cnot"){
+            // row, column coordinates at placement
+            unsigned long circuitControlRow= gtt["control"][0];  // json array
+
+            // edge case!
+            //             set the column value to place a 'floating' CNOT
+            if (placingMoment > s_scene->columnAtRow[circuitControlRow])
+               s_scene->columnAtRow[circuitControlRow]= placingMoment;
+
+            unsigned long columnCircuitControl=
+                  s_scene->columnAtRow[circuitControlRow];
+
+            unsigned long circuitTargetRow= gtt["target"];
+            unsigned long columnCircuitTarget=
+                  s_scene->columnAtRow[circuitTargetRow];
+
+            // *** abort read: the count of circuit columns exceeds the columns
+            // limit of simulator ***
+            if (columnCircuitControl > 20 || columnCircuitTarget > 20){
+               qDebug() << "process aborted: inserting CNOT will exceed the "
+                           "column limits of simulator";
+               break ;
+            }
+
+            // align the placement columns of CNOT control and its (dummy)
+            // target
+            if (columnCircuitControl > columnCircuitTarget)
+               s_scene->columnAtRow[circuitTargetRow]= columnCircuitControl;
+            else if (columnCircuitControl < columnCircuitTarget)
+               s_scene->columnAtRow[circuitControlRow]= columnCircuitTarget;
+
+            // set tile-type and upwards/downwards orientation
+            if (circuitControlRow > circuitTargetRow){
+               // compare with logic for 'operator, CNOT t upwards arrow' in
+               // AlgorithmLattice::placeOperator
+               row= circuitTargetRow;
+               // CNOT t upwards arrow
+               openSign= s_scene->p_operators->patterns[6];
+            }
+            else if (circuitControlRow < circuitTargetRow){
+               row= circuitControlRow;
+               // CNOT t downwards arrow
+               openSign= s_scene->p_operators->patterns[7];
+            }
+
+            // place the CNOT
+            column= s_scene->columnAtRow[row];
+            p_tileType= new SignMeasure(openSign);
+            s_scene->prepareOperator(*p_tileType, row, column);
+
+            // advance the column count for row of CNOT (dummy) target
+            if (row == circuitControlRow)
+               s_scene->columnAtRow[circuitTargetRow] += 1;
+            else if (row == circuitTargetRow)
+               s_scene->columnAtRow[circuitControlRow] += 1;
+         }
+         else {
+            row= gtt["target"];
+
+            // edge case!
+            //             set the column value to place a 'floating' tile
+            if (placingMoment > s_scene->columnAtRow[row])
+               s_scene->columnAtRow[row]= placingMoment;
+
+            column= s_scene->columnAtRow[row];
+
+            // *** abort read: the count of circuit columns exceeds the columns
+            // limit of simulator ***
+            if (column > 20){
+               qDebug() << "process aborted: operator insertion exceeds the "
+                           "column limits of simulator";
+               break ;
+            }
+            else {
+               if (gtt["gate"] == "h")
+                  openSign= s_scene->p_operators->patterns[3];  // 'Hadamard'
+               else if (gtt["gate"] == "rx")
+                  openSign= s_scene->p_operators->patterns[0];   // 'X-rotation'
+               else if (gtt["gate"] == "ry")
+                  openSign= s_scene->p_operators->patterns[1];   // 'Y-rotation'
+               else if (gtt["gate"] == "rz")
+                  openSign= s_scene->p_operators->patterns[2];   // 'Z-rotation'
+               else if (gtt["gate"] == "s")
+                  openSign= s_scene->p_operators->patterns[4];   // 'S'
+               else if (gtt["gate"] == "t")
+                  openSign= s_scene->p_operators->patterns[5];   // 'T'
+               else if (gtt["gate"] == "x")
+                  openSign= s_scene->p_operators->measurements[0];   // 'sigma x'
+               else if (gtt["gate"] == "y")
+                  openSign= s_scene->p_operators->measurements[1];   // 'sigma y'
+               else if (gtt["gate"] == "z")
+                  openSign= s_scene->p_operators->measurements[2];   // 'sigma z'
+               else
+                  continue ;
+
+               p_tileType= new SignMeasure(openSign);
+               s_scene->prepareOperator(*p_tileType, row, column);
+            }
+         }
+         s_scene->addItem(p_tileType);
+
+         // iff row has 20 tiles, insert readout tile
+         if (column + 1 == 21){
+            p_tileType= new SignMeasure(s_scene->ketPlus);
+            s_scene->prepareOperator(*p_tileType, row, column + 1);
+            s_scene->addItem(p_tileType);
+
+            return ;
+         }
+      }
    }
    else
       qDebug() << "That file is not opening";
