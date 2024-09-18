@@ -10,9 +10,6 @@
 #include <vector>
 
 
-// basic_json: iterable container of input circuit
-static nlohmann::json etch_circuit;
-
 // triple: gate and its SE, SW coordinates
 struct Gate_SE_SW {
    std::string gate;
