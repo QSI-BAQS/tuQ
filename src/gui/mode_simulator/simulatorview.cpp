@@ -72,10 +72,14 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
       // accumulate the columns count of each row (inc. dummy CNOT target)
       if (savedCol > lastCol)
          lastCol= savedCol;
-      if (lastCol > savedCol && lastRow < savedRow)
-         s_scene->columnAtRow[lastRow]= lastCol + 1;
-      if (savedRow > lastRow)
+      // at each new row, set columnAtRow of previous row and clear var,
+      //    lastCol
+      if (savedRow > lastRow){
+         if (lastCol > savedCol)
+            s_scene->columnAtRow[lastRow]= lastCol + 1;
+         lastCol= 0;
          lastRow= savedRow;
+      }
 
       // specify tile but ignore marker for dummy CNOT target (see method,
       // saveAlgorithm below)
