@@ -44,16 +44,19 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
    // adapt cirq- to Etch-schema
    json ionq_schema;
    ionq_schema["qubits"]= qbits_count + 1;   // qbits_count + 1 -> (ionQ) "qubits"
+   ionq_schema["moments"];   // a proxy count of graph columns
    ionq_schema["circuit"]= json::array();
 
    json object_gate= json::object({
-      {"gate",""}
-      ,{"control",json::array()}
-      ,{"target",0}
+      {"moment", 0}
+      ,{"gate", ""}
+      ,{"control", json::array()}
+      ,{"target", 0}
    });
 
    json moments= cirq_circuit.at("moments");
-   unsigned long moment_counter {0};
+   // mode_simulator requires a non-zero based counter
+   unsigned long moment_counter {1};
    bool other_gate {false};
 
    for (json moment : moments) {
@@ -69,27 +72,32 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
          if (gate_type == "CnotPowGate"
          || (gate_type == "CXPowGate" && exponent == 1.0)){
             unsigned long cnot_target= operation["qubits"][1]["x"].get<unsigned long>();
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "cnot";
             // assigning 'target' to object_gate["control"] is not an error
             object_gate["control"].push_back(target);
             object_gate["target"]= cnot_target;
          }
          else if (gate_type == "HPowGate"){
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "h";
             object_gate["target"]= target;
          }
          else if (gate_type == "PhasedXPowGate" || gate_type == "PhasedXZGate"){
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "rx";
             object_gate["target"]= target;
          }
          else if (gate_type == "S"){
             // 'vanilla' S gate, Cf. 'ZPowGate' below; see
             // https://quantumai.google/cirq/build/gates#single_qubit_gates
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "s";
             object_gate["target"]= target;
          }/*
          else if (gate_type == "SwapPowGate"){
             unsigned long swap_target= operation["qubits"][1]["x"].get<unsigned long>();
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "swap";
             // assigning 'target' to object_gate["control"] is not an error
             object_gate["control"].push_back(target);
@@ -98,14 +106,18 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
          else if (gate_type == "T"){
             // 'vanilla' T gate, Cf. 'ZPowGate' below; see
             // https://quantumai.google/cirq/build/gates#single_qubit_gates
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "t";
             object_gate["target"]= target;
          }
          else if (gate_type == "X"){
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "x";
             object_gate["target"]= target;
          }
          else if (gate_type == "XPowGate"){
+            object_gate["moment"]= moment_counter;
+
             if (exponent == 1)
                object_gate["gate"]= "x";
             else
@@ -114,10 +126,13 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
             object_gate["target"]= target;
          }
          else if (gate_type == "Y"){
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "y";
             object_gate["target"]= target;
          }
          else if (gate_type == "YPowGate"){
+            object_gate["moment"]= moment_counter;
+
             if (exponent == 1)
                object_gate["gate"]= "y";
             else
@@ -126,10 +141,13 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
             object_gate["target"]= target;
          }
          else if (gate_type == "Z"){
+            object_gate["moment"]= moment_counter;
             object_gate["gate"]= "z";
             object_gate["target"]= target;
          }
          else if (gate_type == "ZPowGate"){
+            object_gate["moment"]= moment_counter;
+
             if (exponent == 0.25)
                object_gate["gate"]= "t";
             else if (exponent == 0.5)
@@ -153,13 +171,15 @@ nlohmann::json cirq_to_ionq_schema(const nlohmann::json & cirq_circuit) {
       }
       if (other_gate){
          std::cout << "\nprocess aborted: gate " << gate_unrecognised
-         << " at \"moments\" " << moment_counter << " is unrecognised."
+         << " at \"moments\" " << moment_counter - 1 << " is unrecognised."
          << std::endl;
 
          exit (0);
       }
       moment_counter += 1;
    }
+   ionq_schema["moments"]= moment_counter;
+
    return ionq_schema;
 }
 
