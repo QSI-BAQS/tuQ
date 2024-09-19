@@ -10,7 +10,7 @@
 #include <QTextStream>
 
 
-// public:
+// public
 SimulatorView::SimulatorView(QWidget * parent)
       : QGraphicsView(parent), s_scene(new AlgorithmLattice(this))
 {
@@ -34,8 +34,8 @@ SimulatorView::SimulatorView(QWidget * parent)
 void SimulatorView::openAlgorithm(const QString & rfile) {
    QFile loadfile(rfile);
    // read conditions: read-only, text
-   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      qDebug() << " file is not open";
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
+      qDebug() << "file is not open";
       return;
    }
 
@@ -49,9 +49,9 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
    // place all tiles
    int savedRow;
-   int lastRow= 0;
+   int lastRow {0};
    int savedCol;
-   int lastCol= 0;
+   int lastCol {0};
    QString tileData{inStream.readLine()};
 
    while (!tileData.isNull()) {
@@ -72,29 +72,32 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
       // accumulate the columns count of each row (inc. dummy CNOT target)
       if (savedCol > lastCol)
          lastCol= savedCol;
-      // at each new row, set columnAtRow of previous row and clear var,
-      //    lastCol
+      // at each new row: set columnAtRow of the previous row, update 'switch
+      //    rows' on the tile palette then clear variable, lastCol
       if (savedRow > lastRow){
          if (lastCol > savedCol)
             s_scene->columnAtRow[lastRow]= lastCol + 1;
+
+         // update the QComboBox, 'switch rows'
+         auto p_comboBox= s_scene->p_operators->possibleRows;
+         auto rowValue = QString::number(savedRow);
+         if (p_comboBox->findText(rowValue) == -1){
+            p_comboBox->insertItem(savedRow, rowValue);
+            // reset 'switch rows' display to the added row
+            p_comboBox->setCurrentIndex(savedRow);
+         }
+
          lastCol= 0;
          lastRow= savedRow;
       }
 
       // specify tile but ignore marker for dummy CNOT target (see method,
       // saveAlgorithm below)
-      if (openSign != "CNOT_marker") {
+      if (openSign != "CNOT_marker"){
          // reproduce tile
          p_tileType = new SignMeasure(openSign);
          p_tileType->setPos(nodeAddress[savedRow][savedCol]);
 
-         // update the QComboBox, 'switch rows'
-         if (openSign.startsWith("CNOT t")) {
-            auto rowValue = QString::number(savedRow + 1);
-            s_scene->p_operators->possibleRows->insertItem(savedRow + 1, rowValue);
-            // reset 'switch rows' display to the added row
-            s_scene->p_operators->possibleRows->setCurrentIndex(savedRow + 1);
-         }
          s_scene->addItem(p_tileType);
       }
       tileData= inStream.readLine();
@@ -192,7 +195,8 @@ void SimulatorView::readCircuit(const QString & cjson) {
 
             // *** abort read: the count of circuit columns exceeds the columns
             // limit of simulator ***
-            if (columnCircuitControl > 20 || columnCircuitTarget > 20){
+            if (columnCircuitControl > (implicitRow - 1)
+            || columnCircuitTarget > (implicitRow - 1)){
                qDebug() << "process aborted: inserting CNOT will exceed the "
                            "column limits of simulator";
                break ;
@@ -242,7 +246,7 @@ void SimulatorView::readCircuit(const QString & cjson) {
 
             // *** abort read: the count of circuit columns exceeds the columns
             // limit of simulator ***
-            if (column > 20){
+            if (column > (implicitRow - 1)){
                qDebug() << "process aborted: operator insertion exceeds the "
                            "column limits of simulator";
                break ;
@@ -286,7 +290,7 @@ void SimulatorView::readCircuit(const QString & cjson) {
       }
    }
    else
-      qDebug() << "That file is not opening";
+      qDebug() << "file is not open";
 }
 
 // write instructions, format .txt
@@ -295,7 +299,7 @@ void SimulatorView::saveAlgorithm(const QString & wfile
    QFile writefile(wfile);
    // save conditions: write-only, text
    if (!writefile.open(QIODevice::WriteOnly | QIODevice::Text)){
-      qDebug() << " file is not open";
+      qDebug() << "file is not open";
       return ;
    }
 
