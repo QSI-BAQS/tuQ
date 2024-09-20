@@ -101,7 +101,6 @@ void MainWindow::createMenus() {
 
    graphMenu= menuBar()->addMenu(tr("&Graph"));
    graphMenu->addAction(a_addLattice);
-   graphMenu->addAction(a_simulate);
 }
 
 void MainWindow::dialogOpen(const QString * openfile) {
@@ -196,10 +195,6 @@ void MainWindow::setActions() {
    a_saveGraph->setShortcut(tr("Ctrl+s"));
    connect(a_saveGraph,&QAction::triggered,this
            ,[this](){ dialogSave(graphsavefile); });
-
-   a_simulate= new QAction(tr("S&imulate"),this);
-   a_simulate->setShortcut(tr("Ctrl+i"));
-//   connect(a_simulate,&QAction::triggered,[this](){ simulate(); });
 }
 
 void MainWindow::setCompiler() {
@@ -209,7 +204,6 @@ void MainWindow::setCompiler() {
    a_readCircuit->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
    a_saveGraph->setEnabled(false);
-   a_simulate->setEnabled(false);
 
    *p_view_setting= tuQ_mode::compiler;
    setView();
@@ -222,7 +216,6 @@ void MainWindow::setModeller() {
    a_compile->setEnabled(false);
    a_openAlgorithm->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
-   a_simulate->setEnabled(false);
 
    setView();   // tuQ_mode::mode_modeller is default view_setting
 
