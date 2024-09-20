@@ -29,7 +29,6 @@ class MainWindow : public QMainWindow
    QAction * a_readCircuit {};
    QAction * a_saveAlgorithm {};
    QAction * a_saveGraph {};
-   QAction * a_simulate {};
 
    QMenu * circuitMenu {};
    QMenu * editMenu {};
