@@ -12,12 +12,12 @@
 class SimulatorView : public QGraphicsView
 {
    unsigned long lastColumn {};
-   unsigned long mStat {};
+   unsigned long mStat {1};
    unsigned long nStat {};
    QString openSign {};
    SignMeasure * p_tileType {};
 
-   void patternAtNode(unsigned long);
+   void latticeFromPatterns(unsigned long);
 
 public:
    explicit SimulatorView(QWidget * parent= nullptr);
