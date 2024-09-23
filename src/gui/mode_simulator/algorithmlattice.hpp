@@ -28,7 +28,7 @@ class AlgorithmLattice : public QGraphicsScene
 public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
 
-   unsigned long columnAtRow [21]= {0};
+   unsigned long columnAtRow [latticeDim]= {0};
    QString ket0 {"0"};
    QString ketPlus {"+"};
    OperatorPalette * p_operators;
