@@ -43,8 +43,8 @@ void AlgorithmLattice::addRow() {
 //   but not both.
 //   post-condition: N/A
 
-   // cap, number of rows = 21
-   if (*maxRowMarker < 21)
+   // cap, number of rows at latticeDim
+   if (*maxRowMarker < latticeDim)
       *maxRowMarker += 1;
    else
       return ;
@@ -127,8 +127,8 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned long column) {
    // cap 1: 'readout' operator marks the end of this row
    if (previousOperator == "+")
       return ;
-   // cap 2: number of columns = 21
-   if (column == 20){
+   // cap 2: number of columns at latticeDim
+   if (column == (latticeDim - 1)){
       p_endOfRow= new SignMeasure(ketPlus);
       prepareOperator(*p_endOfRow,*rowMarker, column);
       addItem(p_endOfRow);
