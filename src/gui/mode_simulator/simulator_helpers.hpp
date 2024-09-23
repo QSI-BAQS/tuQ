@@ -5,7 +5,8 @@
 #include <QPushButton>
 
 
-extern const QPointF nodeAddress [21][21];
+const static int latticeDim {21};
+extern const QPointF nodeAddress [latticeDim][latticeDim];
 
 QPushButton * h_createOperatorButton(const QString &);
 
