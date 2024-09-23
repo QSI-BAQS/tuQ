@@ -28,6 +28,11 @@ SimulatorView::SimulatorView(QWidget * parent)
    auto vbar= new QScrollBar(Qt::Vertical, this);
    setVerticalScrollBar(vbar);
    vbar->setSliderPosition((int) y - 25);
+
+   // realtime update of hypothetical lattice dimensions
+   connect(s_scene, &QGraphicsScene::changed, [this](){
+      latticeFromPatterns(
+            s_scene->p_operators->possibleRows->currentText().toULong()); });
 }
 
 // read instructions, format .txt
@@ -280,7 +285,7 @@ void SimulatorView::readCircuit(const QString & cjson) {
          s_scene->addItem(p_tileType);
 
          // iff row has 20 tiles, insert readout tile
-         if (column + 1 == 21){
+         if (column + 1 == latticeDim){
             p_tileType= new SignMeasure(s_scene->ketPlus);
             s_scene->prepareOperator(*p_tileType, row, column + 1);
             s_scene->addItem(p_tileType);
@@ -295,7 +300,7 @@ void SimulatorView::readCircuit(const QString & cjson) {
 
 // write instructions, format .txt
 void SimulatorView::saveAlgorithm(const QString & wfile
-                                , const unsigned long (&latticeColumnsAtRow)[21]) const {
+            , const unsigned long (&latticeColumnsAtRow)[latticeDim]) const {
    QFile writefile(wfile);
    // save conditions: write-only, text
    if (!writefile.open(QIODevice::WriteOnly | QIODevice::Text)){
@@ -342,13 +347,14 @@ void SimulatorView::saveAlgorithm(const QString & wfile
                   p_itemAtColumn);
             // edge case!
             //             it appears that QGraphicsScene::itemAt never
-            // actually points at NULL but rather the nullptr returned by it is
-            // from exception-handling of a check of memory address.  In
-            // effect, this means qgraphicsitem_cast will continue pointing at
-            // the last positive match until the next positive match replaces
-            // it, thereby creating a phantom operator. This conditional is a
-            // specific workaround to the problem and unavoidably repeats logic
-            // of the previous if ( == nullptr) conditional
+            // actually points at NULL but rather the 'returned' nullptr
+            // originates with exception-handling as part of a check of memory
+            // address.  In effect, this means qgraphicsitem_cast will continue
+            // pointing at the last positive match until the next positive
+            // match replaces it, thereby creating a phantom operator. This
+            // conditional is a specific workaround to the problem and
+            // unavoidably repeats logic of the previous if ( == nullptr)
+            // conditional.
             if (p_operatorAtColumn->showOperator() == "0" && c > 0)
                marker= QChar(0x03C3) % " x";
             else
@@ -369,4 +375,54 @@ void SimulatorView::saveAlgorithm(const QString & wfile
    }
    writefile.flush();
    writefile.close();
+}
+
+
+// private
+void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
+   // count of rows in hypothetical lattice
+   if ((placementRow + 1) >= mStat)   // account for zero-based nodeAddress
+      mStat= placementRow + 1;
+
+   // columnAtRow is the starting position of a pattern
+   unsigned long column= s_scene->columnAtRow[placementRow] - 1;
+   // account for empty nodes of nodeAddress
+   unsigned long lastColumn= lastColumnAtRow[placementRow];
+   unsigned long colsDiff= column - lastColumn;
+//QString pattern;
+   if (colsDiff > 1){
+      for (unsigned long lc= lastColumn + 1; lc < column; ++lc) {
+         QGraphicsItem * p_operatorAtRowMinusOne=
+               s_scene->itemAt(nodeAddress[placementRow - 1][lc], QTransform());
+         auto * p_cnotAtRowMinusOne= qgraphicsitem_cast<SignMeasure *>(
+               p_operatorAtRowMinusOne);
+
+         if (p_cnotAtRowMinusOne != nullptr
+             && p_cnotAtRowMinusOne->showOperator().startsWith("CNOT t"))
+            nStat += 5;   // (dummy) CNOT target
+         else
+            nStat += 3;   // x-basis measurements
+      }
+   }
+   else {
+      // get the pattern's details
+      QPointF pos= nodeAddress[placementRow][column];
+      QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos, QTransform());
+      auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
+            p_itemAtColumn);
+     QString pattern= p_operatorAtColumn->showOperator();   // debug: NULL
+
+      if (pattern == "0" || pattern == "+")
+         nStat += 1;   // pattern = 'initialise' or 'readout'
+      else if (pattern.startsWith("CNOT t")){   // pattern = CNOT
+         mStat += 2;
+         nStat += 5;
+      }
+      else
+         nStat += 3;   // all other patterns
+   }
+   lastColumnAtRow[placementRow]= column;
+qDebug() << "placementRow" << placementRow << "; column" << column
+   << "; lastColumn" << lastColumn /*<< "\npattern" << pattern*/ << "mStat" << mStat << "; nStat" << nStat
+   << "; mStat . nStat" << mStat * nStat << "\n";
 }
