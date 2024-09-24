@@ -11,7 +11,8 @@
 
 class SimulatorView : public QGraphicsView
 {
-   unsigned long lastColumnAtRow [latticeDim]= {0};
+   unsigned long columnLengths [latticeDim]= {0};
+   unsigned long columnMarker [latticeDim]= {0};
    unsigned long mStat {1};
    unsigned long nStat {1};
    QString openSign {};
@@ -26,7 +27,7 @@ public:
 
    void openAlgorithm(const QString &);
    void readCircuit(const QString &);
-   void saveAlgorithm(const QString &, const unsigned long (&)[21]) const;
+   void saveAlgorithm(const QString &, const unsigned long (&)[latticeDim]) const;
 };
 
 #endif //TUQ_SIMULATORVIEW_HPP
