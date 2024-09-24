@@ -13,7 +13,7 @@ class SimulatorView : public QGraphicsView
 {
    unsigned long lastColumnAtRow [latticeDim]= {0};
    unsigned long mStat {1};
-   unsigned long nStat {};
+   unsigned long nStat {1};
    QString openSign {};
    SignMeasure * p_tileType {};
 
