@@ -14,7 +14,7 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
    p_initialiseRow= new SignMeasure(ket0);
    p_initialiseRow->setPos(nodeAddress[0][0]);
    addItem(p_initialiseRow);
-
+   // column counter reflects |0> at nodeAddress[0][0]
    columnAtRow[*rowMarker] += 1;
 
    // method by (p_operators) button id, excluding button 'add row'
@@ -161,13 +161,13 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned long column) {
    else if (sign == "CNOT t" % QChar(0x2193)){   // operator, CNOT t downwards arrow
       // edge case!
       //             three consecutive CNOTs as proxy for Swap gate
-      if (previousOperator == "CNOT t" % QChar(0x2191)){
-         if (column > 2){
-            prepareOperator(*p_operatorType, *rowMarker, column);
-
-            // align column counts of control and target rows
-            columnAtRow[*maxRowMarker]= column + 1;
-         }
+      unsigned long activeRow= p_operators->possibleRows->
+            currentText().toULong();   // the (switch) row presently active for the user
+      if (previousOperator == "CNOT t" % QChar(0x2191)
+      && activeRow != *rowMarker){
+         prepareOperator(*p_operatorType, activeRow, column);
+         // align column counts of control and target rows
+         columnAtRow[*maxRowMarker]= column + 1;
       }
       else {
          unsigned long rowCNOTDownwardsArrow= *rowMarker + 1;
