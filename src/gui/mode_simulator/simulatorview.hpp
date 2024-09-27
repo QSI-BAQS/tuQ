@@ -12,7 +12,6 @@
 class SimulatorView : public QGraphicsView
 {
    unsigned long columnLengths [latticeDim]= {0};
-   unsigned long columnMarker [latticeDim]= {0};
    unsigned long mStat {1};
    unsigned long nStat {1};
    QString openSign {};
