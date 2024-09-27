@@ -30,9 +30,27 @@ SimulatorView::SimulatorView(QWidget * parent)
    vbar->setSliderPosition((int) y - 25);
 
    // realtime update of hypothetical lattice dimensions
-   connect(s_scene, &QGraphicsScene::changed, [this](){
+   auto p_palette= s_scene->p_operators;
+   connect(p_palette->measurement_buttons,&QButtonGroup::idClicked
+         ,[this, p_palette](){
+            latticeFromPatterns(
+                  p_palette->possibleRows->currentText().toULong());
+         });
+   connect(p_palette->pattern_buttons,&QButtonGroup::idClicked
+         ,[this, p_palette](const int id){
+      unsigned long checkRow= p_palette->possibleRows->currentText().toULong();
+
+      // to avoid nullptr: CNOT- upwards arrow (id: 6), downwards arrow (id: 7)
+      (id == 6 && checkRow > 0) ? checkRow -= 1 : checkRow;
+      if (id == 7){
+         checkRow > 0 ? checkRow -= 1 : checkRow;
+         swapProxy1= true;
+      }
+      latticeFromPatterns(checkRow);
+   });
+   connect(p_palette->p_addRow, &QPushButton::clicked, [this, p_palette](){
       latticeFromPatterns(
-            s_scene->p_operators->possibleRows->currentText().toULong()); });
+         p_palette->possibleRows->currentText().toULong()); });
 }
 
 // read instructions, format .txt
@@ -380,49 +398,67 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
 // private
 void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
-   // count of rows in hypothetical lattice
-   if ((placementRow + 1) >= mStat)   // account for zero-based nodeAddress
-      mStat= placementRow + 1;
+   // derive the maximum area of the lattice ('substrate') required to resource
+   // the algorithm, by calculating the eastern and southern perimeters of that
+   // (hypothetical) lattice.
 
-   // columnAtRow is the starting position of a pattern
+   // account for |0> placed by AlgorithmLattice constructor or method, addRow
+   if (columnLengths[placementRow] == 0)
+      columnLengths[placementRow]= 1;
+
+   // adjust for the AlgorithmLattice variable, columnAtRow being the starting
+   // position of a pattern
    unsigned long column= s_scene->columnAtRow[placementRow] - 1;
-   // account for empty nodes of nodeAddress
-   unsigned long lastColumn= lastColumnAtRow[placementRow];
-   unsigned long colsDiff= column - lastColumn;
-//QString pattern;
-   if (colsDiff > 1){
-      for (unsigned long lc= lastColumn + 1; lc < column; ++lc) {
-         QGraphicsItem * p_operatorAtRowMinusOne=
-               s_scene->itemAt(nodeAddress[placementRow - 1][lc], QTransform());
-         auto * p_cnotAtRowMinusOne= qgraphicsitem_cast<SignMeasure *>(
-               p_operatorAtRowMinusOne);
 
-         if (p_cnotAtRowMinusOne != nullptr
-             && p_cnotAtRowMinusOne->showOperator().startsWith("CNOT t"))
-            nStat += 5;   // (dummy) CNOT target
-         else
-            nStat += 3;   // x-basis measurements
-      }
-   }
-   else {
-      // get the pattern's details
-      QPointF pos= nodeAddress[placementRow][column];
-      QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos, QTransform());
-      auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
+   // get the pattern's position on the lattice
+   QPointF pos= nodeAddress[placementRow][column];
+
+   QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos, QTransform());
+   auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
             p_itemAtColumn);
-     QString pattern= p_operatorAtColumn->showOperator();   // debug: NULL
+   QString pattern= p_operatorAtColumn->showOperator();
 
-      if (pattern == "0" || pattern == "+")
-         nStat += 1;   // pattern = 'initialise' or 'readout'
-      else if (pattern.startsWith("CNOT t")){   // pattern = CNOT
-         mStat += 2;
-         nStat += 5;
-      }
-      else
-         nStat += 3;   // all other patterns
+   // reset the (hypothetical) lattice eastern and southern perimeters with the
+   // added pattern
+   if (pattern == "0"){   // pattern = 'initialise' and the marker of a new row
+      if (placementRow > 0)
+         mStat += 1;
+      columnLengths[placementRow] += 1;
    }
-   lastColumnAtRow[placementRow]= column;
-qDebug() << "placementRow" << placementRow << "; column" << column
-   << "; lastColumn" << lastColumn /*<< "\npattern" << pattern*/ << "mStat" << mStat << "; nStat" << nStat
-   << "; mStat . nStat" << mStat * nStat << "\n";
+   else if (pattern == "+")   // pattern = 'readout'
+      columnLengths[placementRow] += 1;
+   else if (pattern.startsWith("CNOT t")){
+      columnLengths[placementRow] += 5;
+      // align columns
+      columnLengths[placementRow + 1]= columnLengths[placementRow];
+
+      if (pattern == "CNOT t" % QChar(0x2191)){   // CNOT target is row - 1
+         // does this CNOT qualify as the second of a proxy swap pattern;
+         // recall, placementRow determines colSwapProxy1
+         if (swapProxy1 && colSwapProxy1 == column - 1)
+            swapProxy2= true;
+      }
+      if (pattern == "CNOT t" % QChar(0x2193)){   // CNOT target is row + 1
+         // edge case!
+         //            Iff this CNOT pattern is the first in a proxy swap
+         // pattern or it is a solitary instance, extend the southern perimeter
+         // of the (hypothetical) lattice
+         if (swapProxy1 && !swapProxy2){
+            mStat += 2;
+            colSwapProxy1= column;   // recall, placementRow determines column
+         }
+         else if (swapProxy1 && swapProxy2){
+            // this CNOT pattern is the third and final in a proxy swap pattern
+            swapProxy1= false;
+            swapProxy2= false;
+         }
+      }
+   }
+   else
+      columnLengths[placementRow] += 3;   // all other patterns
+
+   // reset nStat?
+   if (columnLengths[placementRow] > nStat)
+      nStat= columnLengths[placementRow];
+qDebug() << "pattern" << pattern << "mStat" << mStat << "; nStat" << nStat << "; mStat . nStat" << mStat * nStat;
 }
