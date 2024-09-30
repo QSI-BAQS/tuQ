@@ -4,6 +4,31 @@
 
 #include "simulator_helpers.hpp"
 
+#include <QStringBuilder>
+
+
+// public:
+LatticeStats::LatticeStats(unsigned long south, unsigned long east)
+      : perimeterS(south), perimeterE(east) {}
+
+void LatticeStats::paint(QPainter * painter
+      , const QStyleOptionGraphicsItem * option
+      , QWidget * widget) {
+   Q_UNUSED(option)
+   Q_UNUSED(widget)
+
+   painter->setFont(QFont{"Times New Roman", 36});
+   painter->setPen(QPen {Qt::black,2});
+
+   QRectF backdrop {-22,-15,875,50};
+
+   QString latticeOutput= "lattice dimensions [" % QString::number(perimeterS)
+         % QChar (',') % QString::number(perimeterE) % "]; qubits: "
+         % QString::number(perimeterS * perimeterE);
+   painter->drawText(backdrop, Qt::AlignLeft,latticeOutput);
+
+   painter->setRenderHint(QPainter::Antialiasing);
+}
 
 const QPointF nodeAddress [latticeDim][latticeDim] = {
       { {-725,-475}, {-625,-475}, {-428,-475}, {-231,-475}, {-34,-475}, {163,-475}, {360,-475}, {557,-475}, {754,-475}, {951,-475}, {1148,-475}, {1345,-475}, {1542,-475}, {1739,-475}, {1936,-475}, {2133,-475}, {2330,-475}, {2527,-475}, {2724,-475}, {2921,-475}, {3118,-475} },
