@@ -17,14 +17,15 @@ void LatticeStats::paint(QPainter * painter
    Q_UNUSED(option)
    Q_UNUSED(widget)
 
-   painter->setFont(QFont{"Times New Roman", 36});
+   painter->setFont(QFont{"Times New Roman", 32});
    painter->setPen(QPen {Qt::black,2});
 
-   QRectF backdrop {-22,-15,875,50};
+   QRectF backdrop {-22,-15,1000,50};
 
    QString latticeOutput= "lattice dimensions [" % QString::number(perimeterS)
          % QChar (',') % QString::number(perimeterE) % "]; qubits: "
-         % QString::number(perimeterS * perimeterE);
+         % QString::number(perimeterS * perimeterE) % ", T-patterns: "
+         % QString::number(countTPatterns);
    painter->drawText(backdrop, Qt::AlignLeft,latticeOutput);
 
    painter->setRenderHint(QPainter::Antialiasing);
