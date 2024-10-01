@@ -12,7 +12,7 @@ class LatticeStats : public QGraphicsItem
    unsigned long perimeterE {};
    unsigned long perimeterS {};
 
-   const QRectF patternRect {-22,-15,152,56};
+   const QRectF patternRect {-22,-15,152,52};
 
 public:
    explicit LatticeStats(unsigned long, unsigned long);
@@ -21,11 +21,10 @@ public:
    void paint(QPainter *, const QStyleOptionGraphicsItem *
          , QWidget *) override;
 
-   const unsigned long & valPerimeterE= perimeterE;
-   const unsigned long & valPerimeterS= perimeterS;
+   unsigned long countTPatterns {};
 
-   void setPerimeterE(unsigned long east) { perimeterE= east; }
-   void setPerimeterS(unsigned long south) { perimeterS= south; }
+   unsigned long * const p_perimeterE= &perimeterE;
+   unsigned long * const p_perimeterS= &perimeterS;
 };
 
 const static int latticeDim {21};
