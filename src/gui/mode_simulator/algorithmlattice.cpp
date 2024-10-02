@@ -4,6 +4,7 @@
 
 #include "algorithmlattice.hpp"
 
+
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
       : QGraphicsScene(parent)
@@ -189,4 +190,3 @@ void AlgorithmLattice::placeOperator(QString sign, unsigned long column) {
 
    addItem(p_operatorType);
 }
-

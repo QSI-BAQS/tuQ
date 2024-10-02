@@ -32,7 +32,6 @@ public:
    QString ket0 {"0"};
    QString ketPlus {"+"};
    OperatorPalette * p_operators;
-   LatticeStats * p_stats;
 
    void addRow();
    void prepareOperator(SignMeasure &, unsigned long, unsigned long);
