@@ -7,7 +7,7 @@
 
 // public
 AlgorithmLattice::AlgorithmLattice(QWidget * parent)
-      : QGraphicsScene(parent)
+      : QGraphicsScene(parent), p_stats(new LatticeStats(1,1))
 {
    p_operatorType= nullptr;
    p_operators= new OperatorPalette();
@@ -17,6 +17,8 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
    addItem(p_initialiseRow);
    // column counter reflects |0> at nodeAddress[0][0]
    columnAtRow[*rowMarker] += 1;
+
+   p_stats->setPos(-725, -550);
 
    // method by (p_operators) button id, excluding button 'add row'
    connect(p_operators->measurement_buttons,&QButtonGroup::idClicked
@@ -34,6 +36,7 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
            ,[this](int index){ *rowMarker= index; });
 
    p_operators->show();
+   addItem(p_stats);
 }
 
 void AlgorithmLattice::addRow() {
