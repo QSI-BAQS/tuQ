@@ -17,14 +17,15 @@ class LatticeStats : public QGraphicsItem
 public:
    explicit LatticeStats(unsigned long, unsigned long);
 
+   unsigned long countTPatterns {};
+   unsigned long & valPerimeterE= perimeterE;
+   unsigned long & valPerimeterS= perimeterS;
+
    [[nodiscard]] QRectF boundingRect() const override { return patternRect; }
    void paint(QPainter *, const QStyleOptionGraphicsItem *
          , QWidget *) override;
-
-   unsigned long countTPatterns {};
-
-   unsigned long * const p_perimeterE= &perimeterE;
-   unsigned long * const p_perimeterS= &perimeterS;
+   void set_perimeterE(unsigned long east) { perimeterE= east; }
+   void set_perimeterS(unsigned long south) { perimeterS= south; }
 };
 
 const static int latticeDim {21};
