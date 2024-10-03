@@ -14,9 +14,7 @@ class SimulatorView : public QGraphicsView
    unsigned long colSwapProxy1;
    unsigned long columnLengths [latticeDim]= {0};
    unsigned long mStat {1};
-   unsigned long mStatOpened;
    unsigned long nStat {1};
-   unsigned long nStatOpened;
    QString openSign {};
    SignMeasure * p_tileType {};
    bool swapProxy1 {false};
