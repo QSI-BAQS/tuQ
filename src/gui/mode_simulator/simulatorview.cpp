@@ -15,7 +15,7 @@ SimulatorView::SimulatorView(QWidget * parent)
       : QGraphicsView(parent), s_scene(new AlgorithmLattice(this))
 {
    // encompass 21 * 21 tiles
-   s_scene->setSceneRect(-760,-500,4150,1580);
+   s_scene->setSceneRect(-760,-575,4150,1655);
    setScene(s_scene);
 
    const qreal x= s_scene->sceneRect().x();
@@ -35,7 +35,7 @@ SimulatorView::SimulatorView(QWidget * parent)
          ,[this, p_palette](){
             latticeFromPatterns(
                   p_palette->possibleRows->currentText().toULong());
-         });
+   });
    connect(p_palette->pattern_buttons,&QButtonGroup::idClicked
          ,[this, p_palette](const int id){
       unsigned long checkRow= p_palette->possibleRows->currentText().toULong();
@@ -48,9 +48,10 @@ SimulatorView::SimulatorView(QWidget * parent)
       }
       latticeFromPatterns(checkRow);
    });
-   connect(p_palette->p_addRow, &QPushButton::clicked, [this, p_palette](){
-      latticeFromPatterns(
-         p_palette->possibleRows->currentText().toULong()); });
+   connect(p_palette->p_addRow, &QPushButton::clicked
+           , [this, p_palette](){ latticeFromPatterns(
+      p_palette->possibleRows->currentText().toULong());
+   });
 }
 
 // read instructions, format .txt
@@ -75,6 +76,11 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    int lastRow {0};
    int savedCol;
    int lastCol {0};
+
+   // see method, latticeFromPatterns: lattice dimension variables
+   QString perimeter;
+   unsigned long distance;
+
    QString tileData{inStream.readLine()};
 
    while (!tileData.isNull()) {
@@ -86,10 +92,14 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
          savedRow= tileSpecs.at(2).toInt();
          savedCol= tileSpecs.at(3).toInt();
       }
-      else {
+      else if (tileSpecs.length() == 3){
          openSign= tileSpecs.at(0);
          savedRow= tileSpecs.at(1).toInt();
          savedCol= tileSpecs.at(2).toInt();
+      }
+      else {   // see method, latticeFromPatterns: collect lattice dimensions
+         perimeter= tileSpecs.at(0);
+         distance= tileSpecs.at(1).toULong();
       }
 
       // accumulate the columns count of each row (inc. dummy CNOT target)
@@ -123,6 +133,14 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
          s_scene->addItem(p_tileType);
       }
+/*   TO DO: requires fix to pointer problem at latticeFromPatterns
+      // statistics of the (hypothetical) lattice underlying the algorithm at
+      // save
+      if (perimeter == "south")
+         mStat= distance;
+      if (perimeter == "east")
+         nStat= distance;
+*/
       tileData= inStream.readLine();
    }
    s_scene->columnAtRow[savedRow]= savedCol + 1;
@@ -391,6 +409,10 @@ void SimulatorView::saveAlgorithm(const QString & wfile
       implicitRow += 1;
       columns= latticeColumnsAtRow[implicitRow];
    }
+   auto ioStats= s_scene->p_stats;
+   write << "south " << ioStats->valPerimeterS << "\n";
+   write << "east " << ioStats->valPerimeterE;
+
    writefile.flush();
    writefile.close();
 }
@@ -398,10 +420,31 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
 // private
 void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
-   // derive the maximum area of the lattice ('substrate') required to resource
-   // the algorithm, by calculating the eastern and southern perimeters of that
-   // (hypothetical) lattice.
+   // derive then render as data
+   //    - [last row, last column],
+   //    - qbits count,
+   //    - count of T-patterns,
+   // of the (hypothetical) lattice - 'substrate' - required to resource the
+   // algorithm.
 
+   auto ioStats= s_scene->p_stats;
+/*   TO DO: (s_scene->)p_stats falls off the stack between running
+ *      openAlgorithm and latticeFromPatterns.  The current set_perimeterE/S
+ *      methods and the previous p_perimeterS/E pointer solutions result in a
+ *      SEGFAULT so the methods cannot work as a sequence until a fix for this
+ *      problem appears.
+ *
+ *   // openAlgorithm assigns mStat, nStat but does not update ioStats->p_perimeterS/E
+ *   if (mStat > 1){
+ *      ioStats->set_perimeterS(mStat);
+ *      mStat= 0;
+ *   }
+ *qDebug() << "perimeterS " << ioStats->valPerimeterS << "; mStat " << mStat << "\n";
+ *   if (nStat > 1){
+ *      ioStats->set_perimeterE(nStat);
+ *      nStat= 0;
+ *   }
+ *qDebug() << "perimeterE " << ioStats->valPerimeterE << "; nStat " << nStat;  */
    // account for |0> placed by AlgorithmLattice constructor or method, addRow
    if (columnLengths[placementRow] == 0)
       columnLengths[placementRow]= 1;
@@ -442,8 +485,11 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
          // edge case!
          //            Iff this CNOT pattern is the first in a proxy swap
          // pattern or it is a solitary instance, extend the southern perimeter
-         // of the (hypothetical) lattice
-         if (swapProxy1 && !swapProxy2){
+         // of the (hypothetical) lattice.
+         // Term 3 of the conditional is to prevent two contiguous CNOT
+         // downwards arrows (a user running tests on bit flips?) inflating
+         // mStat.
+         if (swapProxy1 && !swapProxy2 && colSwapProxy1 != column - 1){
             mStat += 2;
             colSwapProxy1= column;   // recall, placementRow determines column
          }
@@ -454,11 +500,19 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
          }
       }
    }
-   else
-      columnLengths[placementRow] += 3;   // all other patterns
+   else {   // all other patterns
+      columnLengths[placementRow] += 3;
+      // increase T-pattern counter
+      if (pattern == "T")
+         ioStats->countTPatterns += 1;
+   }
 
    // reset nStat?
    if (columnLengths[placementRow] > nStat)
       nStat= columnLengths[placementRow];
-qDebug() << "pattern" << pattern << "mStat" << mStat << "; nStat" << nStat << "; mStat . nStat" << mStat * nStat;
+
+   // render statistics of (hypothetical) lattice
+   ioStats->set_perimeterS(mStat);
+   ioStats->set_perimeterE(nStat);
+   ioStats->update();
 }
