@@ -18,18 +18,17 @@ public:
    explicit LatticeStats(unsigned long, unsigned long);
 
    unsigned long countTPatterns {};
-   unsigned long & valPerimeterE= perimeterE;
-   unsigned long & valPerimeterS= perimeterS;
 
    [[nodiscard]] QRectF boundingRect() const override { return patternRect; }
    void paint(QPainter *, const QStyleOptionGraphicsItem *
          , QWidget *) override;
-   void set_perimeterE(unsigned long east) { perimeterE= east; }
-   void set_perimeterS(unsigned long south) { perimeterS= south; }
+   unsigned long * p_perimeterE= &perimeterE;
+   unsigned long * p_perimeterS= &perimeterS;
 };
 
 const static int latticeDim {21};
 extern const QPointF nodeAddress [latticeDim][latticeDim];
+const static QPointF statsPos {-725, -550};
 
 QPushButton * h_createOperatorButton(const QString &);
 
