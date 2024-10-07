@@ -133,13 +133,13 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
          s_scene->addItem(p_tileType);
       }
-/*   TO DO: requires fix to pointer problem at latticeFromPatterns
-      // statistics of the (hypothetical) lattice underlying the algorithm at
-      // save
-      if (perimeter == "south")
-         mStat= distance;
-      if (perimeter == "east")
-         nStat= distance;
+/*   TO DO: requires fix to NULL pointer at latticeFromPatterns
+ *      // statistics of the (hypothetical) lattice underlying the algorithm at
+ *      // save
+ *      if (perimeter == "south")
+ *         mStat= distance;
+ *      if (perimeter == "east")
+ *         nStat= distance;
 */
       tileData= inStream.readLine();
    }
@@ -410,8 +410,8 @@ void SimulatorView::saveAlgorithm(const QString & wfile
       columns= latticeColumnsAtRow[implicitRow];
    }
    auto ioStats= s_scene->p_stats;
-   write << "south " << ioStats->valPerimeterS << "\n";
-   write << "east " << ioStats->valPerimeterE;
+   write << "south " << *ioStats->p_perimeterS << "\n";
+   write << "east " << *ioStats->p_perimeterE;
 
    writefile.flush();
    writefile.close();
@@ -427,24 +427,22 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
    // of the (hypothetical) lattice - 'substrate' - required to resource the
    // algorithm.
 
-   auto ioStats= s_scene->p_stats;
-/*   TO DO: (s_scene->)p_stats falls off the stack between running
- *      openAlgorithm and latticeFromPatterns.  The current set_perimeterE/S
- *      methods and the previous p_perimeterS/E pointer solutions result in a
- *      SEGFAULT so the methods cannot work as a sequence until a fix for this
- *      problem appears.
- *
+   QGraphicsItem * atStatsPos= s_scene->itemAt(statsPos,QTransform());
+   auto ioStats= qgraphicsitem_cast<LatticeStats *>(atStatsPos);
+/*  TO DO: When latticeFromPatterns follows openAlgorithm, atStatsPos returns NULL
+ *qDebug() << "ioStats->p_perimeterS:" << ioStats->p_perimeterS << "; ioStats->p_perimeterE" << ioStats->p_perimeterE << "\n";
  *   // openAlgorithm assigns mStat, nStat but does not update ioStats->p_perimeterS/E
  *   if (mStat > 1){
- *      ioStats->set_perimeterS(mStat);
+ *      *ioStats->p_perimeterS= mStat;
  *      mStat= 0;
  *   }
- *qDebug() << "perimeterS " << ioStats->valPerimeterS << "; mStat " << mStat << "\n";
+ *qDebug() << "*ioStats->p_perimeterS " << *ioStats->p_perimeterS << "; mStat " << mStat << "\n";
  *   if (nStat > 1){
  *      ioStats->set_perimeterE(nStat);
  *      nStat= 0;
  *   }
- *qDebug() << "perimeterE " << ioStats->valPerimeterE << "; nStat " << nStat;  */
+ *qDebug() << "*ioStats->p_perimeterE " << *ioStats->p_perimeterE << "; nStat " << nStat;
+ */
    // account for |0> placed by AlgorithmLattice constructor or method, addRow
    if (columnLengths[placementRow] == 0)
       columnLengths[placementRow]= 1;
@@ -512,7 +510,7 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
       nStat= columnLengths[placementRow];
 
    // render statistics of (hypothetical) lattice
-   ioStats->set_perimeterS(mStat);
-   ioStats->set_perimeterE(nStat);
+   *ioStats->p_perimeterS= mStat;
+   *ioStats->p_perimeterE= nStat;
    ioStats->update();
 }
