@@ -18,7 +18,7 @@ AlgorithmLattice::AlgorithmLattice(QWidget * parent)
    // column counter reflects |0> at nodeAddress[0][0]
    columnAtRow[*rowMarker] += 1;
 
-   p_stats->setPos(-725, -550);
+   p_stats->setPos(statsPos);
 
    // method by (p_operators) button id, excluding button 'add row'
    connect(p_operators->measurement_buttons,&QButtonGroup::idClicked
