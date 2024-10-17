@@ -29,7 +29,7 @@ public:
    explicit AlgorithmLattice(QWidget * parent= nullptr);
 
    unsigned long columnAtRow [latticeDim]= {0};
-   QString ket0 {"0"};
+   QString ket0 {0x03C8};   // 'Greek small letter psi'
    QString ketPlus {"+"};
    OperatorPalette * p_operators;
    LatticeStats * p_stats;
