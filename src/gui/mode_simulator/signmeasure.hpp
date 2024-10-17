@@ -8,7 +8,7 @@
 // <QGraphicsItem>, <QStringBuilder>
 #pragma once
 
-const extern QChar psi {0x03C8};   // 'Greek small letter psi'
+
 
 class SignMeasure : public QGraphicsItem
 {
@@ -16,6 +16,7 @@ class SignMeasure : public QGraphicsItem
 
    const QPen designatePen {Qt::blue, 18};
    const QRectF patternRect {-22,-15,152,56};
+   QChar psi {0x03C8};   // 'Greek small letter psi'
 
 public:
    explicit SignMeasure(QString &);
