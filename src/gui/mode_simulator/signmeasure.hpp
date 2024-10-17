@@ -8,6 +8,7 @@
 // <QGraphicsItem>, <QStringBuilder>
 #pragma once
 
+const extern QChar psi {0x03C8};   // 'Greek small letter psi'
 
 class SignMeasure : public QGraphicsItem
 {
@@ -21,8 +22,6 @@ public:
 
    // SignMeasure::Type = 65537
    enum { Type= UserType + 1 };
-
-   QChar psi {0x03C8};   // 'Greek small letter psi'
 
    [[nodiscard]] QRectF boundingRect() const override { return patternRect; };
    void paint(QPainter *, const QStyleOptionGraphicsItem *
