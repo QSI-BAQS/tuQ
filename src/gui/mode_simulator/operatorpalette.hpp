@@ -28,7 +28,7 @@ public:
 
    // UTF-16 hexes
    const QChar downArrow {0x2193};   // 'downwards arrow'
-   const QChar slSigma {0x03C3};   // 'Greek small letter slSigma'
+   const QChar slSigma {0x03C3};   // 'Greek small letter sigma'
    const QChar upArrow {0x2191};   // 'upwards arrow'
 
    const QString measurements[measurement_nr] {slSigma % " x", slSigma % " y"
