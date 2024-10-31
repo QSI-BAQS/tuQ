@@ -371,7 +371,7 @@ void SimulatorView::saveAlgorithm(const QString & wfile
             && p_cnotAtRowMinusOne->showOperator().startsWith("CNOT t"))
                marker= "CNOT_marker";
 
-            // otherwise,
+            // otherwise,   ***** 31-OCT drop this?  Xs don't line up like a (Modeller) lattice
             //             introduce an x-basis measurement, as per Raussendorf
             // and Briegel (2002) 'Computational Model Underlying The One-Way
             // Quantum Computer'
@@ -420,6 +420,8 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
 // private
 void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
+// **** 31-OCT rethink this because its numbers aren't consistent with a
+// **** Modeller lattice
    // derive then render as data
    //    - [last row, last column],
    //    - qbits count,
