@@ -64,6 +64,8 @@ void MainWindow::addLattice() {
       else
          view_modeller->setLattice(rows, columns);
    }
+   delete rowsLineEdit;
+   delete columnsLineEdit;
 }
 
 void MainWindow::createMenus() {
