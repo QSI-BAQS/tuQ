@@ -26,6 +26,15 @@ public:
    unsigned long * p_perimeterS= &perimeterS;
 };
 
+class ColumnData
+{
+public:
+   explicit ColumnData(unsigned long, bool);
+
+   unsigned long eastMarker;
+   bool isUpstreamCNOT;
+};
+
 const static int latticeDim {21};
 extern const QPointF nodeAddress [latticeDim][latticeDim];
 const static QPointF statsPos {-725, -550};
