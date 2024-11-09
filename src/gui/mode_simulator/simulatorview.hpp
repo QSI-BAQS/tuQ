@@ -12,7 +12,12 @@
 class SimulatorView : public QGraphicsView
 {
    unsigned long colSwapProxy1;
-   unsigned long columnLengths [latticeDim]= {0};
+   // quantify a hypothetical lattice underlying Simulator tiles
+   ColumnData columnLengths [latticeDim]= {
+         ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false)
+         , ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false)
+         , ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false)
+         , ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false), ColumnData(0, false)};
    unsigned long mStat {1};
    unsigned long nStat {1};
    QString openSign {};
