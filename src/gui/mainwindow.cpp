@@ -4,9 +4,12 @@
 #include "mainwindow.hpp"
 
 #include <algorithm>
+#include <QDebug>
+#include <QFile>
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QRegExpValidator>
+#include <QTextStream>
 
 
 // public:
@@ -113,12 +116,30 @@ void MainWindow::dialogOpen(const QString * openfile) {
    // handle 'cancel' at Dialog box
    if (openfile->isEmpty())
       return ;
-   else {
-      if (*p_view_setting == tuQ_mode::modeller)
-         view_modeller->openGraph(*openfile);
-      else if (*p_view_setting == tuQ_mode::simulator)
-         view_simulator->openAlgorithm(*openfile);
+
+   if (*p_view_setting == tuQ_mode::modeller){
+         QFile file(*openfile);
+
+         // read conditions: read-only, text
+         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            return ;
+
+         QString psi {0x03C8};   // 'Greek small letter psi'
+
+         QTextStream inStream(&file);
+         QString marker;
+         inStream >> marker;
+         file.close();
+
+         // route .txt handle to either 'openAlgorithm' or 'openGraph'; first
+         // character of [algorithm].txt is always 'Greek small letter psi'
+         if (modellerOpen == open_mode::algorithm && marker == psi)
+               view_modeller->openAlgorithm(*openfile);
+         else if (modellerOpen == open_mode::graph && marker != psi)
+            view_modeller->openGraph(*openfile);
    }
+   else if (*p_view_setting == tuQ_mode::simulator)
+         view_simulator->openAlgorithm(*openfile);
 }
 
 void MainWindow::dialogSave(const QString * savefile) {
@@ -176,12 +197,16 @@ void MainWindow::setActions() {
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
    a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
    connect(a_openAlgorithm,&QAction::triggered
-           ,[this](){ dialogOpen(algorithmopenfile); });
+           ,[this](){ modellerOpen= open_mode::algorithm;
+      dialogOpen(algorithmopenfile);
+   });
 
    a_openGraph= new QAction(tr("&Open Graph"),this);
    a_openGraph->setShortcut(tr("Ctrl+o"));
    connect(a_openGraph,&QAction::triggered
-           ,[this](){ dialogOpen(graphopenfile); });
+           ,[this](){ modellerOpen= open_mode::graph;
+      dialogOpen(graphopenfile);
+   });
 
    a_readCircuit= new QAction(tr("&Read Circuit"),this);
    a_readCircuit->setShortcut(tr("Ctrl+r"));
@@ -216,7 +241,6 @@ void MainWindow::setCompiler() {
 void MainWindow::setModeller() {
    // 'grey out' menu items
    a_compile->setEnabled(false);
-   a_openAlgorithm->setEnabled(false);
    a_saveAlgorithm->setEnabled(false);
 
    setView();   // tuQ_mode::mode_modeller is default view_setting
@@ -227,7 +251,6 @@ void MainWindow::setModeller() {
 void MainWindow::setSimulator() {
    // 'grey out' menu items
    a_addLattice->setEnabled(false);
-   a_compile->setEnabled(false);
    a_openGraph->setEnabled(false);
    a_saveGraph->setEnabled(false);
 
