@@ -17,6 +17,9 @@ class MainWindow : public QMainWindow
    tuQ_mode view_setting {tuQ_mode::modeller};
    tuQ_mode * const p_view_setting= &view_setting;
 
+   enum class open_mode {algorithm,graph};
+   open_mode modellerOpen {open_mode::graph};
+
    GraphSelect * settings {};
    CompilerView * view_compiler {};
    GraphView * view_modeller {};
