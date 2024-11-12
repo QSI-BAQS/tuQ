@@ -33,6 +33,7 @@ public:
    explicit GraphView(QWidget * parent= nullptr);
 
    void clear_scene() { scene->clear(); }
+   void openAlgorithm(const QString &);
    void openGraph(const QString &);
    void readCircuit(const QString &);
    void saveGraph(const QString &);
