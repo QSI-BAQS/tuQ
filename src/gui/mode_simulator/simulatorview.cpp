@@ -31,26 +31,26 @@ SimulatorView::SimulatorView(QWidget * parent)
 
    // realtime update of hypothetical lattice dimensions
    auto p_palette= s_scene->p_operators;
-   connect(p_palette->measurement_buttons,&QButtonGroup::idClicked
+   connect(p_palette->measurement_buttons, &QButtonGroup::idClicked
          ,[this, p_palette](){
             latticeFromPatterns(
                   p_palette->possibleRows->currentText().toULong());
    });
-   connect(p_palette->pattern_buttons,&QButtonGroup::idClicked
+   connect(p_palette->pattern_buttons, &QButtonGroup::idClicked
          ,[this, p_palette](const int id){
       unsigned long checkRow= p_palette->possibleRows->currentText().toULong();
 
-      // to avoid nullptr: CNOT- upwards arrow (id: 6), downwards arrow (id: 7)
-      (id == 6 && checkRow > 0) ? checkRow -= 1 : checkRow;
-      if (id == 7){
-         checkRow > 0 ? checkRow -= 1 : checkRow;
+      // CNOT - id: 6, upwards arrow; id: 7, downwards arrow
+      if (id == 6 && checkRow == 0)
+         return ;
+      if (id == 7)
          swapProxy1= true;
-      }
+
       latticeFromPatterns(checkRow);
    });
    connect(p_palette->p_addRow, &QPushButton::clicked
-           , [this, p_palette](){ latticeFromPatterns(
-      p_palette->possibleRows->currentText().toULong());
+           , [this, p_palette](){
+      latticeFromPatterns(p_palette->possibleRows->currentText().toULong());
    });
 }
 
@@ -134,12 +134,12 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
          s_scene->addItem(p_tileType);
       }
 /*   TO DO: requires fix to NULL pointer at latticeFromPatterns
- *      // statistics of the (hypothetical) lattice underlying the algorithm at
- *      // save
- *      if (perimeter == "south")
- *         mStat= distance;
- *      if (perimeter == "east")
- *         nStat= distance;
+ *     // statistics of the (hypothetical) lattice underlying the algorithm at
+ *     // save
+ *     if (perimeter == "south")
+ *        mStat= distance;
+ *     if (perimeter == "east")
+ *        nStat= distance;
 */
       tileData= inStream.readLine();
    }
@@ -370,13 +370,6 @@ void SimulatorView::saveAlgorithm(const QString & wfile
             if (p_cnotAtRowMinusOne != nullptr
             && p_cnotAtRowMinusOne->showOperator().startsWith("CNOT t"))
                marker= "CNOT_marker";
-
-            // otherwise,   ***** 31-OCT drop this?  Xs don't line up like a (Modeller) lattice
-            //             introduce an x-basis measurement, as per Raussendorf
-            // and Briegel (2002) 'Computational Model Underlying The One-Way
-            // Quantum Computer'
-            if (marker.isEmpty())
-               marker= QChar(0x03C3) % " x";
          }
          else {
             auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
@@ -420,18 +413,20 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
 // private
 void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
-// **** 31-OCT rethink this because its numbers aren't consistent with a
-// **** Modeller lattice
    // derive then render as data
    //    - [last row, last column],
    //    - qbits count,
    //    - count of T-patterns,
-   // of the (hypothetical) lattice - 'substrate' - required to resource the
-   // algorithm.
+   // of the (hypothetical) cluster-state resource required to resource the
+   // algorithm (Raussendorf and Briegel 2002 'Computational Model Underlying
+   // The One-Way Quantum Computer')
 
-   QGraphicsItem * atStatsPos= s_scene->itemAt(statsPos,QTransform());
-   auto ioStats= qgraphicsitem_cast<LatticeStats *>(atStatsPos);
+   auto ioStats= s_scene->p_stats;
 /*  TO DO: When latticeFromPatterns follows openAlgorithm, atStatsPos returns NULL
+ *    07-NOV defining ioStats as s_scene->p_stats does not appear to be a fix
+ *** 13-NOV defining westCNOT2 at level 'else if (pattern.startsWith("CNOT t"))'
+ *** then changing it at level 'if (pattern == "CNOT t" % QChar(0x2193))' caused
+ *** the pointer at columnLengths[placementRow].eastMarker to move, like this problem
  *qDebug() << "ioStats->p_perimeterS:" << ioStats->p_perimeterS << "; ioStats->p_perimeterE" << ioStats->p_perimeterE << "\n";
  *   // openAlgorithm assigns mStat, nStat but does not update ioStats->p_perimeterS/E
  *   if (mStat > 1){
@@ -445,9 +440,10 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
  *   }
  *qDebug() << "*ioStats->p_perimeterE " << *ioStats->p_perimeterE << "; nStat " << nStat;
  */
-   // account for |0> placed by AlgorithmLattice constructor or method, addRow
-   if (columnLengths[placementRow] == 0)
-      columnLengths[placementRow]= 1;
+   // account for |psi> as placed by AlgorithmLattice constructor or method,
+   // addRow
+   if (columnLengths[placementRow].eastMarker == 0)
+      columnLengths[placementRow].eastMarker= 1;
 
    // adjust for the AlgorithmLattice variable, columnAtRow being the starting
    // position of a pattern
@@ -455,61 +451,132 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
 
    // get the pattern's position on the lattice
    QPointF pos= nodeAddress[placementRow][column];
-
+   QString pattern;
    QGraphicsItem * p_itemAtColumn= s_scene->itemAt(pos, QTransform());
-   auto * p_operatorAtColumn= qgraphicsitem_cast<SignMeasure *>(
+   if (p_itemAtColumn == nullptr){
+      // catch the nullptr caused by the required 'operator' being the target
+      // qbits of a CNOT at the row immediately adjacent to (placement)row; Cf.
+      // p_operatorAtRowMinusOne logic of AlgorithmLattice::placeOperator and
+      // SimulatorView::saveAlgorithm.  Note condition, 'swapProxy1' is itself
+      // a proxy identifier for CNOT downwards arrow.
+      if (swapProxy1)
+         pattern= "CNOT t" % QChar(0x2193);
+      else
+         pattern= "CNOT t" % QChar(0x2191);
+   }
+   else {
+      auto *p_operatorAtColumn = qgraphicsitem_cast<SignMeasure *>(
             p_itemAtColumn);
-   QString pattern= p_operatorAtColumn->showOperator();
+      pattern= p_operatorAtColumn->showOperator();
+   }
 
    // reset the (hypothetical) lattice eastern and southern perimeters with the
    // added pattern
-   if (pattern == "0"){   // pattern = 'initialise' and the marker of a new row
+   if (pattern == QChar(0x03C8)){   // pattern = 'initialise' and the marker of a new row
       if (placementRow > 0)
          mStat += 1;
-      columnLengths[placementRow] += 1;
+      columnLengths[placementRow].eastMarker= 1;
    }
    else if (pattern == "+")   // pattern = 'readout'
-      columnLengths[placementRow] += 1;
+      columnLengths[placementRow].eastMarker += 1;
    else if (pattern.startsWith("CNOT t")){
-      columnLengths[placementRow] += 5;
-      // align columns
-      columnLengths[placementRow + 1]= columnLengths[placementRow];
+      // westernmost qbit of CNOT must be + 1 of whichever of rows 'control' or
+      // 'target' has the easternmost qbit
+      unsigned long westCNOT1, westCNOT2;
 
-      if (pattern == "CNOT t" % QChar(0x2191)){   // CNOT target is row - 1
+      // CNOT upwards arrow
+      if (pattern == "CNOT t" % QChar(0x2191)){
          // does this CNOT qualify as the second of a proxy swap pattern;
          // recall, placementRow determines colSwapProxy1
          if (swapProxy1 && colSwapProxy1 == column - 1)
             swapProxy2= true;
+
+         // super-conditional, (!columnLengths[placementRow].isUpstreamCNOT):
+         // this CNOT requires an intermediate row to accommodate the 'nexus'
+         // qbit that links the 'control' qbits to the 'target' qbits.  An
+         // intermediate row should factor in this method's output once only.
+         // Any CNOT that bridges the same two rows as an 'upstream' CNOT
+         // should not add another intermediate row.
+         // See AlgorithmLattice::placeOperator, a CNOT upwards arrow will not
+         // insert a new target row
+         if (!columnLengths[placementRow].isUpstreamCNOT)
+            mStat += 1;
+
+         westCNOT1= columnLengths[placementRow].eastMarker;
+         westCNOT2= columnLengths[placementRow - 1].eastMarker;
+
+         if (westCNOT2 > westCNOT1)
+            columnLengths[placementRow].eastMarker= westCNOT2;
+         else if (westCNOT1 > westCNOT2)
+            columnLengths[placementRow].eastMarker= westCNOT1;
+
+         // set eastMarker
+         columnLengths[placementRow].eastMarker += 6;
+         // align columns
+         columnLengths[placementRow - 1].eastMarker=
+               columnLengths[placementRow].eastMarker;
       }
-      if (pattern == "CNOT t" % QChar(0x2193)){   // CNOT target is row + 1
+
+      // CNOT downwards arrow
+      if (pattern == "CNOT t" % QChar(0x2193)){
+         // super-conditional, (!columnLengths[placementRow].isUpstreamCNOT):
+         // see conditional (pattern == "CNOT t" % QChar(0x2191)), above
+         if (!columnLengths[placementRow].isUpstreamCNOT){
+            // placing CNOT downwards arrow will extend the southernmost
+            // boundary of the (hypothetical) lattice.
+            if (placementRow == *ioStats->p_perimeterS)
+               mStat += 2;
+            else
+               mStat += 1;
+            // edge case!
+            //            this CNOT is the first or third in a proxy Swap
+            // pattern.
+            // Term 3, (colSwapProxy1 != column - 1) is to prevent two
+            // contiguous CNOT downwards arrows (a user running tests on bit
+            // flips?) inflating mStat.
+            if (swapProxy1 && !swapProxy2 && colSwapProxy1 != column - 1)
+               colSwapProxy1= column;   // recall, placementRow determines column
+            else if (swapProxy1 && swapProxy2){
+               // CNOT is the third and final in a proxy swap pattern
+               swapProxy1= false;
+               swapProxy2= false;
+            }
+         }
+
+         westCNOT1= columnLengths[placementRow].eastMarker;
          // edge case!
-         //            Iff this CNOT pattern is the first in a proxy swap
-         // pattern or it is a solitary instance, extend the southern perimeter
-         // of the (hypothetical) lattice.
-         // Term 3 of the conditional is to prevent two contiguous CNOT
-         // downwards arrows (a user running tests on bit flips?) inflating
-         // mStat.
-         if (swapProxy1 && !swapProxy2 && colSwapProxy1 != column - 1){
-            mStat += 2;
-            colSwapProxy1= column;   // recall, placementRow determines column
-         }
-         else if (swapProxy1 && swapProxy2){
-            // this CNOT pattern is the third and final in a proxy swap pattern
-            swapProxy1= false;
-            swapProxy2= false;
-         }
+         //             if placing CNOT downwards arrow also adds a new row,
+         // 'placement row' has become placementRow += 1
+         if (placementRow > 0 && !columnLengths[placementRow].isUpstreamCNOT)
+            westCNOT2= columnLengths[placementRow - 1].eastMarker;
+         else
+            westCNOT2= columnLengths[placementRow + 1].eastMarker;
+
+         if (westCNOT2 > westCNOT1)
+            columnLengths[placementRow].eastMarker= westCNOT2;
+         else if (westCNOT1 > westCNOT2)
+            columnLengths[placementRow].eastMarker= westCNOT1;
+
+         // set eastMarker
+         columnLengths[placementRow].eastMarker += 6;
+         // align columns
+         columnLengths[placementRow + 1].eastMarker=
+               columnLengths[placementRow].eastMarker;
       }
+
+      // mark placementRow with an 'upstream CNOT' flag
+      columnLengths[placementRow].isUpstreamCNOT= true;
    }
    else {   // all other patterns
-      columnLengths[placementRow] += 3;
+      columnLengths[placementRow].eastMarker += 4;
       // increase T-pattern counter
       if (pattern == "T")
          ioStats->countTPatterns += 1;
    }
 
    // reset nStat?
-   if (columnLengths[placementRow] > nStat)
-      nStat= columnLengths[placementRow];
+   if (columnLengths[placementRow].eastMarker > nStat)
+      nStat= columnLengths[placementRow].eastMarker;
 
    // render statistics of (hypothetical) lattice
    *ioStats->p_perimeterS= mStat;
