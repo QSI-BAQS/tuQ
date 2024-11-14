@@ -65,6 +65,21 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
    QTextStream inStream(&loadfile);
 
+   // dimensions of a (hypothetical) lattice underlying the algorithm at Save;
+   // see method, latticeFromPatterns
+   QString perimeter, distance;
+   inStream >> perimeter >> distance;
+/* TO DO: requires fix to NULL pointer at latticeFromPatterns
+ *  if (perimeter == "south")
+ *     mStat= distance.toULong();
+*/
+   perimeter.clear();
+   distance.clear();
+
+   inStream >> perimeter >> distance;
+/*  if (perimeter == "east")
+ *     nStat= distance.toULong();
+*/
    // prepare view
    s_scene->clear();
    // reset columns counter
@@ -76,10 +91,6 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
    int lastRow {0};
    int savedCol;
    int lastCol {0};
-
-   // see method, latticeFromPatterns: lattice dimension variables
-   QString perimeter;
-   unsigned long distance;
 
    QString tileData{inStream.readLine()};
 
@@ -96,10 +107,6 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
          openSign= tileSpecs.at(0);
          savedRow= tileSpecs.at(1).toInt();
          savedCol= tileSpecs.at(2).toInt();
-      }
-      else {   // see method, latticeFromPatterns: collect lattice dimensions
-         perimeter= tileSpecs.at(0);
-         distance= tileSpecs.at(1).toULong();
       }
 
       // accumulate the columns count of each row (inc. dummy CNOT target)
@@ -133,14 +140,7 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
 
          s_scene->addItem(p_tileType);
       }
-/*   TO DO: requires fix to NULL pointer at latticeFromPatterns
- *     // statistics of the (hypothetical) lattice underlying the algorithm at
- *     // save
- *     if (perimeter == "south")
- *        mStat= distance;
- *     if (perimeter == "east")
- *        nStat= distance;
-*/
+
       tileData= inStream.readLine();
    }
    s_scene->columnAtRow[savedRow]= savedCol + 1;
@@ -346,6 +346,10 @@ void SimulatorView::saveAlgorithm(const QString & wfile
 
    QTextStream write(&writefile);
 
+   auto ioStats= s_scene->p_stats;
+   write << "south " << *ioStats->p_perimeterS << "\n";
+   write << "east " << *ioStats->p_perimeterE << "\n";
+
    int arraySize= sizeof(latticeColumnsAtRow) / sizeof(latticeColumnsAtRow[0]);
    int implicitRow {0};
    unsigned int columns= latticeColumnsAtRow[implicitRow];
@@ -384,13 +388,14 @@ void SimulatorView::saveAlgorithm(const QString & wfile
             // conditional is a specific workaround to the problem and
             // unavoidably repeats logic of the previous if ( == nullptr)
             // conditional.
-            if (p_operatorAtColumn->showOperator() == "0" && c > 0)
-               marker= QChar(0x03C3) % " x";
+            if (p_operatorAtColumn->showOperator() == QChar(0x03C8) && c > 0)
+               marker= "";
             else
                marker= p_operatorAtColumn->showOperator();
          }
 
-         // write: tile type
+         // write: tile type, the conditional offsets the superfluous notation
+         // from adding CNOT downwards arrow to an algorithm
          if (marker != ""){
             write << marker << " "
             // write: row, column position, as x, y coordinates
@@ -404,9 +409,6 @@ void SimulatorView::saveAlgorithm(const QString & wfile
       implicitRow += 1;
       columns= latticeColumnsAtRow[implicitRow];
    }
-   auto ioStats= s_scene->p_stats;
-   write << "south " << *ioStats->p_perimeterS << "\n";
-   write << "east " << *ioStats->p_perimeterE;
 
    writefile.flush();
    writefile.close();
