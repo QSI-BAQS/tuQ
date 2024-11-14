@@ -391,13 +391,15 @@ void SimulatorView::saveAlgorithm(const QString & wfile
          }
 
          // write: tile type
-         write << marker << " "
-         // write: row, column position, as x, y coordinates
-         << implicitRow << " " << c
-         // write: newline
-         << "\n";
+         if (marker != ""){
+            write << marker << " "
+            // write: row, column position, as x, y coordinates
+            << implicitRow << " " << c
+            // write: newline
+            << "\n";
 
-         marker.clear();
+            marker.clear();
+         }
       }
       implicitRow += 1;
       columns= latticeColumnsAtRow[implicitRow];
