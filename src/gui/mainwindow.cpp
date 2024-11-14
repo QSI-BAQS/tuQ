@@ -124,8 +124,6 @@ void MainWindow::dialogOpen(const QString * openfile) {
          if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
             return ;
 
-         QString psi {0x03C8};   // 'Greek small letter psi'
-
          QTextStream inStream(&file);
          QString marker;
          inStream >> marker;
@@ -133,9 +131,9 @@ void MainWindow::dialogOpen(const QString * openfile) {
 
          // route .txt handle to either 'openAlgorithm' or 'openGraph'; first
          // character of [algorithm].txt is always 'Greek small letter psi'
-         if (modellerOpen == open_mode::algorithm && marker == psi)
-               view_modeller->openAlgorithm(*openfile);
-         else if (modellerOpen == open_mode::graph && marker != psi)
+         if (modellerOpen == open_mode::algorithm && marker == "south")
+            view_modeller->openAlgorithm(*openfile);
+         else if (modellerOpen == open_mode::graph && marker != "south")
             view_modeller->openGraph(*openfile);
    }
    else if (*p_view_setting == tuQ_mode::simulator)
