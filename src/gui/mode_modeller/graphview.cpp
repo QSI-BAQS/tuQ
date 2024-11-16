@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QKeyEvent>
 #include <QScrollBar>
+#include <QStringBuilder>
 #include <QTextStream>
 
 
@@ -30,15 +31,100 @@ GraphView::GraphView(QWidget * parent)
    createElementMenus(scene);
 }
 
+void GraphView::openAlgorithm(const QString & afile) {
+   QFile loadfile(afile);
+   // read conditions: read-only, text
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
+      qDebug() << "file is not open";
+      return ;
+   }
+
+   QTextStream inStream(&loadfile);
+
+   // instantiate a lattice with dimensions set by the source algorithm; see
+   // SimulatorView method, latticeFromPatterns
+   QString direction, magnitude;
+   unsigned long row {0};
+   unsigned long column {0};
+   inStream >> direction >> magnitude;
+
+   if (direction == "south")
+      row= magnitude.toULong();
+
+   direction.clear();
+   magnitude.clear();
+
+   inStream >> direction >> magnitude;
+
+   if (direction == "east")
+      column= magnitude.toULong();
+
+   // column 0 of the (lattice) output of this function will always represent
+   // the |G> initialisation column whereas the easternmost column of the
+   // (lattice) output will represent the |G> readout column iff each row of
+   // the source algorithm is closed with a readout tile
+   setLattice(row, column);
+
+   // mark initialised rows
+   for (int i= 0; i < row; ++i) {
+      qreal init_row= 70;
+      QPointF init_pos {0,i * init_row};
+
+      // map end_pos to (scene) then, locate (vertex) within scene
+      QGraphicsItem * ptr_init= scene->itemAt(
+            mapToParent(init_pos.toPoint()), QTransform());
+      auto initialisation_vertex= qgraphicsitem_cast<GraphVertex *>(ptr_init);
+
+      initialisation_vertex->resetVertexColour(Qt::red);
+   }
+
+   QString tile {""};
+   int rowPos {0};
+   int colPos {0};
+
+   tile= inStream.readLine();
+   while (!tile.isNull()) {
+      QStringList tileStats= tile.split(QChar(' '));
+      tile.clear();
+
+      // concatenate operators with white-spacing in name (e.g. 'sigma' 'x')
+      if (tileStats.length() == 4){
+         tile= tileStats.at(0) % " " % tileStats.at(1);
+         rowPos= tileStats.at(2).toInt();
+         colPos= tileStats.at(3).toInt();
+      }
+      else if (tileStats.length() == 3){
+         tile= tileStats.at(0);
+         rowPos= tileStats.at(1).toInt();
+         colPos= tileStats.at(2).toInt();
+      }
+
+      // 4-qbits patterns
+//      if (!tile.startsWith("CNOT") && tile != "+")
+
+// TO DO: change vertex id from number to X/Y prompt
+// GraphVertex only instantiates with UL
+//    - nested class, IDs (*** openGraph to populate ***)
+//    - showVertexMeasure method (*** add this to openGraph; saveGraph to record both IDS ***), calls (GraphVertex) painter
+
+// CNOT_marker is a proxy nexus row marker only for CNOT downwards arrow
+// *** nexus must reverse initialised row marking ***
+
+      // showVertexMeasure();
+      tile.clear();
+      tile= inStream.readLine();
+   }
+
+   loadfile.close();
+}
 
 // read instructions, format .txt
 void GraphView::openGraph(const QString & rfile) {
    QFile loadfile(rfile);
-
    // read conditions: read-only, text
-   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      qDebug() << " file is not open";
-      return;
+   if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
+      qDebug() << "file is not open";
+      return ;
    }
 
    QTextStream in_stream(&loadfile);
@@ -49,6 +135,11 @@ void GraphView::openGraph(const QString & rfile) {
    while (!vertex_data.isNull()) {
       QStringList vertex_stats= vertex_data.split(QChar(' '));
       // reproduce vertex
+/*      QString vid= vertex_stats.at(0);
+      if (vid == "X" || vid == "Y")
+         auto *v= new GraphVertex(vertexmenu, vid);
+      else
+         auto *v= new GraphVertex(vertexmenu, vid.toULong());*/
       unsigned long vid= vertex_stats.at(0).toULong();
       auto *v= new GraphVertex(vertexmenu, vid);
 
