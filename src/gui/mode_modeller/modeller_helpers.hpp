@@ -8,6 +8,9 @@
 #include <QGraphicsScene>
 
 
+qreal tileToColumn[116];
+qreal tileToRow[21];
+
 void h_deleteEdge(GraphEdge *, QGraphicsScene &);
 void h_deleteVertex(GraphVertex &, QGraphicsScene &);
 unsigned long h_itemCounter(int, const QGraphicsScene &);

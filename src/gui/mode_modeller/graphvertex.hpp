@@ -27,7 +27,16 @@ class GraphVertex : public QGraphicsEllipseItem
    QPen vertexcircumferencepen {Qt::black, 2};
    QBrush vertexfill {QColor::fromRgb(245,245,245)};   // 'white smoke'
 
-   unsigned long vertexid {};
+   // vertex ID
+   class IDs {
+   public:
+      unsigned long vid {};
+      char measure_prompt {};
+   };
+
+   // flags for painting vertex ID
+   enum class id_flag {idUL, idC};
+   id_flag render {id_flag::idUL};
    QFont vertexidfont {"SansSerif", 8, QFont::Normal};
    QPen vertexidpen {Qt::darkBlue, 1};
 
@@ -36,12 +45,17 @@ public:
    explicit GraphVertex(QMenu *, unsigned long vid= 0
          , QGraphicsItem * parent= nullptr);
 
+   IDs id;
+
+   enum class measure_char {X, Y, Z, N};
+
    const QVector<GraphEdge *> * alledges {& edges};
-   const unsigned long * vertexID {& vertexid};
+   const unsigned long * vertexID {& id.vid};
 
    void add_edge(GraphEdge * edge) { edges.push_back(edge); };
    void remove_edge(GraphEdge * edge) { edges.removeAll(edge); };
    void resetVertexColour(QColor, qreal= 2, QColor= QColor(245,245,245));
+   void resetVertexID(measure_char= measure_char::N);
 
 protected:
    void contextMenuEvent(QGraphicsSceneContextMenuEvent *) override;

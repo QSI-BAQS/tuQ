@@ -17,8 +17,10 @@ GraphView::GraphView(QWidget * parent)
 {
    // '... one unit on the scene is represented by one pixel on the screen.'
    // *** ~[121, 121] accessible at this sceneRect ***
-   /* FIX: setSceneRect has to be consistent between this and setLattice otherwise
-      lattice created in one set of coordinates do not show up in the other set */
+/* tuQ v0.2:
+ * setSceneRect has to be consistent between this and setLattice otherwise
+ *    lattice created in one set of coordinates do not show up in the other set
+*/
    scene->setSceneRect(-2500,-2500,11000,11000);
 
    setScene(scene);
@@ -65,9 +67,14 @@ void GraphView::openAlgorithm(const QString & afile) {
    // the source algorithm is closed with a readout tile
    setLattice(row, column);
 
+   // row of the lattice = n, starting position of the first qbit of pattern x
+   // on row n = [n]
+   qreal firstQbitByRow[row];
+
    // mark initialised rows
    for (int i= 0; i < row; ++i) {
       qreal init_row= 70;
+
       QPointF init_pos {0,i * init_row};
 
       // map end_pos to (scene) then, locate (vertex) within scene
@@ -75,12 +82,14 @@ void GraphView::openAlgorithm(const QString & afile) {
             mapToParent(init_pos.toPoint()), QTransform());
       auto initialisation_vertex= qgraphicsitem_cast<GraphVertex *>(ptr_init);
 
-      initialisation_vertex->resetVertexColour(Qt::red);
+      // change vertex id to measurement prompt
+      initialisation_vertex->resetVertexID(GraphVertex::measure_char::X);
+
+      firstQbitByRow[i]= init_row;
    }
 
    QString tile {""};
    int rowPos {0};
-   int colPos {0};
 
    tile= inStream.readLine();
    while (!tile.isNull()) {
@@ -91,24 +100,24 @@ void GraphView::openAlgorithm(const QString & afile) {
       if (tileStats.length() == 4){
          tile= tileStats.at(0) % " " % tileStats.at(1);
          rowPos= tileStats.at(2).toInt();
-         colPos= tileStats.at(3).toInt();
       }
       else if (tileStats.length() == 3){
          tile= tileStats.at(0);
          rowPos= tileStats.at(1).toInt();
-         colPos= tileStats.at(2).toInt();
       }
 
-      // 4-qbits patterns
-//      if (!tile.startsWith("CNOT") && tile != "+")
+      // 'readout' pattern
+//      if (tile == "+")
 
-// TO DO: change vertex id from number to X/Y prompt
+      // 4-qbits patterns
+      if (!tile.startsWith("CNOT"))
+
+
+
 // GraphVertex only instantiates with UL
-//    - nested class, IDs (*** openGraph to populate ***)
-//    - showVertexMeasure method (*** add this to openGraph; saveGraph to record both IDS ***), calls (GraphVertex) painter
 
 // CNOT_marker is a proxy nexus row marker only for CNOT downwards arrow
-// *** nexus must reverse initialised row marking ***
+// *** {nexus}->resetVertexID(GraphVertex::measure_char::N) ***
 
       // showVertexMeasure();
       tile.clear();
@@ -134,12 +143,10 @@ void GraphView::openGraph(const QString & rfile) {
 
    while (!vertex_data.isNull()) {
       QStringList vertex_stats= vertex_data.split(QChar(' '));
+
+// tuQ v0.2: populate nested class, GraphVertex::IDs; call
+// GraphVertex::getVertexMeasure()
       // reproduce vertex
-/*      QString vid= vertex_stats.at(0);
-      if (vid == "X" || vid == "Y")
-         auto *v= new GraphVertex(vertexmenu, vid);
-      else
-         auto *v= new GraphVertex(vertexmenu, vid.toULong());*/
       unsigned long vid= vertex_stats.at(0).toULong();
       auto *v= new GraphVertex(vertexmenu, vid);
 
@@ -275,6 +282,7 @@ void GraphView::saveGraph(const QString & wfile) {
       if (item->type() == 4){
          auto v= qgraphicsitem_cast<GraphVertex *>(item);
          // vertex ID
+// tuQ v0.2: read GraphVertex::IDs::vid and ::measure_prompt to .txt output
          write << *v->vertexID << " "
          // vertex pos
          << v->pos().x() << " " << v->pos().y();
@@ -305,15 +313,11 @@ void GraphView::setLattice(unsigned long m, unsigned long n) {
    unsigned long id {1};
    qreal xinc {70};
    qreal yinc {70};
-/*
- * 31-JAN-24 the coordinates from a setLattice graph don't match the default
- *    setSceneRect
-
-   // resize for big [m,n]
-   // ~ 3 seconds to render [501,501]; ~ 12 seconds to render [1001,1001]
-   scene->setSceneRect(-50, -50, qreal (n*101), qreal (m*101));
-   setAlignment(Qt::AlignTop | Qt:: AlignLeft);
-   show();
+/* tuQ v0.2:
+ * 1. the coordinates from a setLattice graph don't match the default
+ *    setSceneRect;
+ * 2. resize for big [m,n]: ~ 3 seconds to render [501,501]; ~ 12 seconds to
+ *    render [1001,1001]
 */
    GraphVertex * row_to_row_edges[n];
    GraphVertex * ptr_vertex {};
@@ -379,9 +383,7 @@ void GraphView::keyPressEvent(QKeyEvent * event) {
    || event->key() == Qt::Key_Z){
       cursorState= true;
       setCursorLabel(event->key());
-/*  Q2Graph code includes this + comment for Qt::Key_Z
-      clearSelection()
-*/
+//      clearSelection()
    }
    QGraphicsView::keyPressEvent(event);
 }
@@ -510,7 +512,8 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
       // reformat each of first vertex's neighbours as a prompt to the user to
       // select the special neighbour vertex
       for (GraphVertex *neighbour : vertex1_X_neighbours) {
-         neighbour->resetVertexColour(QColor(0, 255, 0), 4, QColor(173, 255, 47));
+         neighbour->resetVertexColour(QColor(0, 255, 0), 4
+                                      , QColor(173, 255, 47));
       }
    }
    // part 2 -> measurement, x-basis

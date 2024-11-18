@@ -8,11 +8,13 @@
 // public:
 GraphVertex::GraphVertex(QMenu * menu, unsigned long vid
                          , QGraphicsItem * parent)
-   : QGraphicsEllipseItem(parent), contextmenu_v(menu), vertexid(vid) {
+   : QGraphicsEllipseItem(parent), contextmenu_v(menu) {
    // standard vertex: fill, circumference pen
    setRect(vertexboundaryrect);
    setBrush(vertexfill);
    setPen(vertexcircumferencepen);
+
+   id.vid= vid;
 
    // properties of the vertex
    setFlag(QGraphicsItem::ItemIsFocusable);
@@ -26,6 +28,35 @@ void GraphVertex::resetVertexColour(QColor colour, qreal pen, QColor fill) {
    vertexfill= fill;
    setPen(vertexcircumferencepen);
    setBrush(fill);
+
+   update(vertexboundaryrect);
+}
+
+void GraphVertex::resetVertexID(measure_char xy) {
+   switch (xy) {
+      case measure_char::X:
+         id.measure_prompt= 'X';
+         render= id_flag::idC;
+         break ;
+      case measure_char::Y:
+         id.measure_prompt= 'Y';
+         render= id_flag::idC;
+         break ;
+      case measure_char::Z:
+         id.measure_prompt= 'Z';
+         render= id_flag::idC;
+         break ;
+      case measure_char::N:
+         render= id_flag::idUL;
+         break ;
+   }
+
+   if (render == id_flag::idC){
+      vertexcircumferencepen= QPen(Qt::red, 2);
+      setPen(vertexcircumferencepen);
+
+      vertexidpen= QPen(Qt::red, 1);
+   }
 
    update(vertexboundaryrect);
 }
@@ -63,6 +94,16 @@ void GraphVertex::paint(QPainter * painter
    // font, pen and alignment of vertex id
    painter->setFont(vertexidfont);
    painter->setPen(vertexidpen);
-   painter->drawText(vertexboundaryrect, Qt::AlignCenter, QString::number(vertexid));
+
+   switch (render) {
+      case id_flag::idC:
+         painter->drawText(vertexboundaryrect, Qt::AlignCenter
+               ,QChar(id.measure_prompt));
+         break ;
+      case id_flag::idUL:
+         painter->drawText(vertexboundaryrect, Qt::AlignCenter
+               ,QString::number(id.vid));
+         break ;
+   }
 }
 
