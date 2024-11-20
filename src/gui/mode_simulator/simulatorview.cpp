@@ -135,7 +135,7 @@ void SimulatorView::openAlgorithm(const QString & rfile) {
       // saveAlgorithm below)
       if (openSign != "CNOT_marker"){
          // reproduce tile
-         p_tileType = new SignMeasure(openSign);
+         p_tileType= new SignMeasure(openSign);
          p_tileType->setPos(nodeAddress[savedRow][savedCol]);
 
          s_scene->addItem(p_tileType);
@@ -481,7 +481,8 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
          mStat += 1;
       columnLengths[placementRow].eastMarker= 1;
    }
-   else if (pattern == "+")   // pattern = 'readout'
+   else if (pattern == "+" || pattern.startsWith(QChar(0x03C3)))
+      // pattern = 'readout' or individual measurement in basis X/Z/Y
       columnLengths[placementRow].eastMarker += 1;
    else if (pattern.startsWith("CNOT t")){
       // westernmost qbit of CNOT must be + 1 of whichever of rows 'control' or
