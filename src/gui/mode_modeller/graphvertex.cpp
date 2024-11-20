@@ -33,30 +33,40 @@ void GraphVertex::resetVertexColour(QColor colour, qreal pen, QColor fill) {
 }
 
 void GraphVertex::resetVertexID(measure_char xy) {
+   if (xy == measure_char::N){
+      render= id_flag::idUL;
+      return ;
+   }
+
+   render= id_flag::idC;
+
    switch (xy) {
       case measure_char::X:
-         id.measure_prompt= 'X';
-         render= id_flag::idC;
+         id.measure_prompt= u'X';
          break ;
       case measure_char::Y:
-         id.measure_prompt= 'Y';
-         render= id_flag::idC;
+         id.measure_prompt= u'Y';
          break ;
       case measure_char::Z:
-         id.measure_prompt= 'Z';
-         render= id_flag::idC;
+         id.measure_prompt= u'Z';
          break ;
-      case measure_char::N:
-         render= id_flag::idUL;
+      case measure_char::l_eta:
+         id.measure_prompt= eta;
+         break ;
+      case measure_char::l_xi:
+         id.measure_prompt= xi;
+         break ;
+      case measure_char::l_zeta:
+         id.measure_prompt= zeta;
+         break ;
+      default:
          break ;
    }
 
-   if (render == id_flag::idC){
-      vertexcircumferencepen= QPen(Qt::red, 2);
-      setPen(vertexcircumferencepen);
+   vertexcircumferencepen= QPen(Qt::red, 2);
+   setPen(vertexcircumferencepen);
 
-      vertexidpen= QPen(Qt::red, 1);
-   }
+   vertexidpen= QPen(Qt::red, 1);
 
    update(vertexboundaryrect);
 }
