@@ -31,7 +31,7 @@ class GraphVertex : public QGraphicsEllipseItem
    class IDs {
    public:
       unsigned long vid {};
-      char measure_prompt {};
+      char16_t measure_prompt {};
    };
 
    // flags for painting vertex ID
@@ -47,7 +47,10 @@ public:
 
    IDs id;
 
-   enum class measure_char {X, Y, Z, N};
+   char16_t eta {u'\u03B7'};
+   char16_t xi {u'\u03BE'};
+   char16_t zeta {u'\u03B6'};
+   enum class measure_char {X, Y, Z, l_eta, l_xi, l_zeta, N};
 
    const QVector<GraphEdge *> * alledges {& edges};
    const unsigned long * vertexID {& id.vid};
