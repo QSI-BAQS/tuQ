@@ -32,7 +32,7 @@ void GraphVertex::resetVertexColour(QColor colour, qreal pen, QColor fill) {
    update(vertexboundaryrect);
 }
 
-void GraphVertex::resetVertexID(measure_char xy) {
+void GraphVertex::resetVertexID(measure_char xy, QColor colour) {
    if (xy == measure_char::N){
       render= id_flag::idUL;
       return ;
@@ -63,10 +63,10 @@ void GraphVertex::resetVertexID(measure_char xy) {
          break ;
    }
 
-   vertexcircumferencepen= QPen(Qt::red, 2);
+   vertexcircumferencepen= QPen(colour, 2);
    setPen(vertexcircumferencepen);
 
-   vertexidpen= QPen(Qt::red, 1);
+   vertexidpen= QPen(colour, 1);
 
    update(vertexboundaryrect);
 }
