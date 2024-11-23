@@ -4,6 +4,7 @@
 #include "modeller_helpers.hpp"
 
 
+// clearance for 21 contiguous CNOTs
 const qreal tileToColumn[116]= {0
    , 70, 140, 210, 280, 350, 420
    , 490, 560, 630, 700, 770, 840
@@ -26,8 +27,12 @@ const qreal tileToColumn[116]= {0
    , 7630, 7700, 7770, 7840, 7910, 7980
    , 8050};
 
-const qreal tileToRow[21]= {0, 70, 140, 210, 280, 350, 420, 490, 560, 630
-   , 700, 770, 840, 910, 980, 1050, 1120, 1190, 1260, 1330, 1400};
+// clearance for 21 staggered CNOTs
+const qreal tileToRow[43]= {0, 70, 140, 210, 280, 350, 420
+   , 490, 560, 630, 700, 770, 840, 910, 980, 1050, 1120
+   , 1190, 1260, 1330, 1400, 1470, 1540, 1610, 1680, 1750
+   , 1820, 1890, 1960, 2030, 2100, 2170, 2240, 2310, 2380
+   , 2450, 2520, 2590, 2660, 2730, 2800, 2870, 2940};
 
 void h_deleteEdge(GraphEdge * edge, QGraphicsScene & scene) {
    // delete GraphEdge from scene
