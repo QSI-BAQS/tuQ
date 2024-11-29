@@ -9,6 +9,7 @@
 #include <QScrollBar>
 #include <QStringBuilder>
 #include <QTextStream>
+#include <QVector>
 
 
 // public:
@@ -33,7 +34,13 @@ GraphView::GraphView(QWidget * parent)
    createElementMenus(scene);
 }
 
+// create the lattice specified by method, SimulatorView::latticeFromPatterns
+// then repaint each vertex including its ID to reflect the individual
+// measurements abstracted as Simulator tiles
 void GraphView::openAlgorithm(const QString & afile) {
+   // Note in every case except as output of this method, a GraphVertex ID is
+   // type unsigned long
+
    QFile loadfile(afile);
    // read conditions: read-only, text
    if (!loadfile.open(QIODevice::ReadOnly | QIODevice::Text)){
@@ -43,8 +50,8 @@ void GraphView::openAlgorithm(const QString & afile) {
 
    QTextStream inStream(&loadfile);
 
-   // instantiate a lattice with dimensions set by the source algorithm; see
-   // SimulatorView method, latticeFromPatterns
+// part 1 of [algorithm].txt read: instantiate a base lattice with dimensions
+// set by the source algorithm; see SimulatorView method, latticeFromPatterns
    QString direction, magnitude;
    unsigned long row {0};
    unsigned long column {0};
@@ -61,67 +68,408 @@ void GraphView::openAlgorithm(const QString & afile) {
    if (direction == "east")
       column= magnitude.toULong();
 
-   // column 0 of the (lattice) output of this function will always represent
-   // the |G> initialisation column whereas the easternmost column of the
-   // (lattice) output will represent the |G> readout column iff each row of
-   // the source algorithm is closed with a readout tile
+   // Note: column 0 of the (lattice) output of this function will always
+   // represent the |G> initialisation column whereas the easternmost column
+   // of the (lattice) output will represent the |G> readout column iff each
+   // row of the source algorithm is closed with a readout tile
    setLattice(row, column);
 
-   // row of the lattice = n, starting position of the first qbit of pattern x
-   // on row n = [n]
-   qreal firstQbitByRow[row];
+   // move inStream pointer to next character (the inStream.readline()
+   // of pass 1b, below, requires it)
+   qint64 spos= inStream.pos();
+   if (spos != -1)
+      inStream.seek(spos + 1);
+   else
+      return ;
 
-   // mark initialised rows
+// part 2 of [algorithm].txt read:
+//   - space the rows of the lattice as dictated by CNOT tiles of the
+//     algorithm; and
+//   - obtain dimensions for a 2D matrix of 'first qbit' coordinates; and
+//   - initialise each 'wire' row of the lattice.
+   QString cnots= inStream.readLine();
+
+   // [algorithm].txt row addresses
+   int tileRow {0};
+   int rowsTileToLattice[row];
+   // dimensions for patternQbit1, a 2D matrix of 'first qbit' positions
+   int maxTile {0};
+   int columnDimension {0};
+
+   // initialise rowsTileToLattice
    for (int i= 0; i < row; ++i) {
-      qreal init_row= 70;
+      rowsTileToLattice[i]= i;
+   }
 
-      QPointF init_pos {0,i * init_row};
+   // collect tile data for populating 2D matrix of 'first qbit' coordinates
+   QVector<QString> tiles;
 
-      // map end_pos to (scene) then, locate (vertex) within scene
-      QGraphicsItem * ptr_init= scene->itemAt(
-            mapToParent(init_pos.toPoint()), QTransform());
-      auto initialisation_vertex= qgraphicsitem_cast<GraphVertex *>(ptr_init);
+   // space rows of the lattice by position of CNOT tiles in [algorithm].txt
+   QString downCNOT= "CNOT t" % QChar(0x2193);
+   QString upCNOT= "CNOT t" % QChar(0x2191);
+   while (!cnots.isNull()) {
+      int tileCounter {0};
+      int matrixCol {0};
+      QString tc, tile;
+
+      QStringList instanceCNOT= cnots.split(QChar(' '));
+      if (instanceCNOT.length() == 4){
+         tile= instanceCNOT.at(0) % " " % instanceCNOT.at(1);
+         tc= instanceCNOT.at(2);
+         tileCounter= tc.toInt();
+         matrixCol= instanceCNOT.at(3).toInt();
+      }
+      else if (instanceCNOT.length() == 3){
+         tile= instanceCNOT.at(0);
+         tc= instanceCNOT.at(1);
+         tileCounter= tc.toInt();
+         matrixCol= instanceCNOT.at(2).toInt();
+      }
+
+      // obtain data for 2D matrix, patternQbit1, declared below
+      if (tileCounter > maxTile)
+         maxTile= tileCounter;
+      if (matrixCol > columnDimension)
+         columnDimension= matrixCol;
+
+      tiles.push_back(tile % " " % tc);
+
+      // set the lattice row of both CNOT downwards arrow and CNOT upwards
+      // arrow
+      if (tile == downCNOT || tile == upCNOT){
+         // row address of algorithm tile
+         tileRow= instanceCNOT.at(2).toInt();
+
+         int adjRowIndex;
+         adjRowIndex= rowsTileToLattice[tileRow] + 2;
+
+         int base= tileRow + 1;
+         if (rowsTileToLattice[base] < adjRowIndex){
+            rowsTileToLattice[base]= adjRowIndex;
+
+            // reset all successive LATTICE row addresses
+            if (base + 1 < row)
+               for (int i= base + 1; i < row ; ++i) {
+                  rowsTileToLattice[i] += 1;
+               }
+         }
+      }
+
+      cnots= inStream.readLine();
+   }
+
+   // generic pattern variables
+   QPointF pattern_pos;
+   QGraphicsItem * ptr_pattern {nullptr};
+   QString tile {""};
+
+   // initialise each 'wire' row of the lattice
+   for (int i= 0; i < maxTile + 1; ++i) {
+      int wireRow= rowsTileToLattice[i];
+
+      pattern_pos= {0,tileToRow[wireRow]};
+
+      // map pattern_pos to (scene) then, locate initialisation vertex within
+      // scene
+      ptr_pattern= scene->itemAt(
+            mapToParent(pattern_pos.toPoint()), QTransform());
+      auto initialisation_vertex= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
 
       // change vertex id to measurement prompt
       initialisation_vertex->resetVertexID(GraphVertex::measure_char::X);
-
-      firstQbitByRow[i]= init_row;
    }
 
-   QString tile {""};
-   int rowPos {0};
+   // GraphView::openAlgorithm looks up x, y coordinates, preset as
+   // modeller_helpers, tileToColumn and tileToRow; it follows the same
+   // approach as used in methods of AlgorithmLattice and SimulatorView.
+   // patternQbit1 is a 2D matrix of first qbits of patterns as lattice
+   // positions
+   unsigned long patternQbit1[maxTile + 1][columnDimension + 1];
 
-   tile= inStream.readLine();
-   while (!tile.isNull()) {
-      QStringList tileStats= tile.split(QChar(' '));
-      tile.clear();
-
-      // concatenate operators with white-spacing in name (e.g. 'sigma' 'x')
-      if (tileStats.length() == 4){
-         tile= tileStats.at(0) % " " % tileStats.at(1);
-         rowPos= tileStats.at(2).toInt();
+   // 'populate patternQbit1', iteration 1: set default value to zero
+   for (int r= 0; r < maxTile + 1; ++r) {
+      for (int c= 0; c < columnDimension + 1; ++c) {
+         patternQbit1[r][c]= 0;
       }
-      else if (tileStats.length() == 3){
-         tile= tileStats.at(0);
-         rowPos= tileStats.at(1).toInt();
+   }
+
+   // 'populate patternQbit1', iteration 2: set with count of qbits in individual
+   // patterns, accounting for any 'lumpiness' in row lengths
+   int tctr {0};
+
+   for (int r= 0; r < maxTile + 1; ++r) {
+      for (int c= 0; c < columnDimension + 1; ++c) {
+         QString pPlusRow= tiles.at(tctr);
+
+         // account for 'lumpy' row lengths
+         int lws= pPlusRow.lastIndexOf(" ");
+         auto p= pPlusRow.leftRef(lws).trimmed();
+         int plusRow= pPlusRow.midRef(lws).trimmed().toInt();
+
+         if (plusRow > r)
+            break ;
+
+         // in every case, 'psi' initialisation qbit begins a row and '+'
+         // readout qbit closes a row
+         if (p.startsWith(QChar(0x03C8)) || p == "+")
+            patternQbit1[r][c]= 0;
+         else if (p.startsWith(QChar(0x03C3)))
+            patternQbit1[r][c]= 1;   // tile = measurement, basis X/Y/Z
+         else if (p.startsWith("CNOT"))
+            patternQbit1[r][c]= 6;   // ** Note: includes tile 'CNOT_marker' **
+         else
+            patternQbit1[r][c]= 4;   // all other patterns
+
+         if (pPlusRow != tiles.last())
+            tctr += 1;
+      }
+   }
+
+   // 'populate patternQbit1', iteration 3: transition pattern counts of
+   // iteration 2 to cumulative count of qbits by pattern, accounting for any
+   // 'lumpiness' in row lengths
+   unsigned long lastQbit1, qbit1;
+
+   for (int r= 0; r < maxTile + 1; ++r) {
+      for (int c= 1; c < columnDimension + 1; ++c) {
+         lastQbit1= patternQbit1[r][c - 1];
+         qbit1= patternQbit1[r][c];
+
+         // account for 'lumpy' row lengths
+         if (c > 1 && qbit1 == 0)
+            break ;
+
+         // align CNOT control and target at the easternmost qbit 1 of the two
+         // rows
+         if (qbit1 == 6){
+            // northern CNOT row
+            if (r + 1 <= maxTile){
+               unsigned long markerCheck= patternQbit1[r + 1][c];
+               unsigned long endQbitAddressSouth {0};
+
+               if (markerCheck == 6){   // *** edge case: two neighbouring CNOTs, horizontally-aligned ***
+                  // calculate the cumulative qbits at CNOT's southern row
+                  for (int i= 0; i < c; ++i) {
+                     endQbitAddressSouth += patternQbit1[r + 1][i];
+                  }
+
+                  if (endQbitAddressSouth > lastQbit1)
+                     patternQbit1[r][c]= endQbitAddressSouth + qbit1;
+                  else
+                     patternQbit1[r][c]= lastQbit1 + qbit1;
+               }
+            }
+            else {   // southern CNOT row
+               unsigned long endQbitAddressNorth= patternQbit1[r - 1][c];
+               unsigned long indicativeQbit1= lastQbit1 + qbit1;
+
+               if (endQbitAddressNorth > indicativeQbit1)
+                  patternQbit1[r][c]= endQbitAddressNorth;
+               else
+                  patternQbit1[r][c]= indicativeQbit1;
+            }
+         }
+         else
+            patternQbit1[r][c]= lastQbit1 + qbit1;
+      }
+   }
+
+   // as with 'part 2 of [algorithm].txt read' above, the following
+   // inStream.readline() command must point to the QChar at spos + 1
+   inStream.seek(spos + 1);
+
+// second pass of [algorithm].txt: position all tiles as patterns on the
+// lattice
+   QString patternRowColumn= inStream.readLine();
+
+   // loop over [algorithm].txt to set vertex ID(s) to the pattern's required
+   // individual measurement(s)
+   int p_column {0};
+   QString p;
+   int p_row {0};
+   // mapping [algorithm].txt row to lattice row
+   int latticeRow;
+
+   while (!patternRowColumn.isNull()) {
+      QStringList prc= patternRowColumn.split(QChar(' '));
+      if (prc.length() == 4){
+         p= prc.at(0) % " " % prc.at(1);
+         p_row= prc.at(2).toInt();
+         p_column= prc.at(3).toInt();
+      }
+      else if (prc.length() == 3){
+         p= prc.at(0);
+         p_row= prc.at(1).toInt();
+         p_column= prc.at(2).toInt();
       }
 
-      // 'readout' pattern
-//      if (tile == "+")
+      // Lattice row address
+      latticeRow= rowsTileToLattice[p_row];
 
-      // 4-qbits patterns
-      if (!tile.startsWith("CNOT"))
+      // set vertex id of readout pattern
+      if (p == "+"){   // 'readout'
+         // these are lattice readout qbits so place them at rightmost column
+         QPointF readout_pos= {tileToColumn[column - 1], tileToRow[latticeRow]};
+         QGraphicsItem * ptr_readout= scene->itemAt(mapToParent(readout_pos.toPoint())
+               , QTransform());
+         auto readout_vertex= qgraphicsitem_cast<GraphVertex *>(ptr_readout);
+         // set vertex ID to required measurement
+         readout_vertex->resetVertexID(GraphVertex::measure_char::Z);
+      }
 
+      // set vertex id of all other patterns except initialisation and readout
+      if (p.startsWith(QChar(0x03C3))){   // individual measurement
+         // locate qbit 1 of p on the lattice
+         unsigned long qbitAddress= patternQbit1[p_row][p_column];
+         pattern_pos= {tileToColumn[qbitAddress], tileToRow[latticeRow]};
+         ptr_pattern= scene->itemAt(mapToParent(pattern_pos.toPoint())
+               , QTransform());
+         auto v_measure= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
 
+         // set vertex ID to required measurement
+         if (p.endsWith("x"))
+            v_measure->resetVertexID(GraphVertex::measure_char::X);
+         else if (p.endsWith("y"))
+            v_measure->resetVertexID(GraphVertex::measure_char::Y);
+         else if (p.endsWith("z"))
+            v_measure->resetVertexID(GraphVertex::measure_char::Z);
+      }
+      else if (p.startsWith("CNOT ")){
+         QString downCNOT {"CNOT t" % QChar(0x2193)};
+         QString upCNOT {"CNOT t" % QChar(0x2191)};
 
-// GraphVertex only instantiates with UL
+         // collect all vertices of p
+         GraphVertex * p_CNOT[6];
 
-// CNOT_marker is a proxy nexus row marker only for CNOT downwards arrow
-// *** {nexus}->resetVertexID(GraphVertex::measure_char::N) ***
+         // extrapolate qbit 1 of the northern row of the CNOT from its
+         // terminating qbit on this row.  Recall that qbit 1 of control and
+         // target rows are aligned as positions in patternQbit1
+         unsigned long qN= patternQbit1[p_row][p_column] - 5;
 
-      // showVertexMeasure();
-      tile.clear();
-      tile= inStream.readLine();
+         // place northern row of CNOT
+         for (int i= 0; i < 6; ++i) {
+            pattern_pos= {tileToColumn[qN], tileToRow[latticeRow]};
+            ptr_pattern= scene->itemAt(
+                  mapToParent(pattern_pos.toPoint()), QTransform());
+            p_CNOT[i]= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
+
+            qN += 1;
+         }
+         if (p == downCNOT){   // 'control' row
+            for (int i= 0; i < 5; ++i) {
+               p_CNOT[i]->resetVertexID(GraphVertex::measure_char::Y);
+            }
+            p_CNOT[5]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p == upCNOT){   // 'target' row
+            p_CNOT[0]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[1]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[2]->resetVertexID(GraphVertex::measure_char::Y);
+            p_CNOT[3]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[4]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[5]->resetVertexID(GraphVertex::measure_char::X);
+         }
+
+         // place southern row of CNOT
+         auto southRow= rowsTileToLattice[p_row + 1];
+         qN= qN - 6;
+
+         for (int i= 0; i < 6; ++i) {
+            pattern_pos= {tileToColumn[qN], tileToRow[southRow]};
+            ptr_pattern= scene->itemAt(
+                  mapToParent(pattern_pos.toPoint()), QTransform());
+            p_CNOT[i]= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
+
+            qN += 1;
+         }
+         if (p == upCNOT){   // 'control' row
+            for (int i= 0; i < 5; ++i) {
+               p_CNOT[i]->resetVertexID(GraphVertex::measure_char::Y);
+            }
+            p_CNOT[5]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p == downCNOT){   // 'target' row
+            p_CNOT[0]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[1]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[2]->resetVertexID(GraphVertex::measure_char::Y);
+            p_CNOT[3]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[4]->resetVertexID(GraphVertex::measure_char::X);
+            p_CNOT[5]->resetVertexID(GraphVertex::measure_char::X);
+         }
+
+         // 'nexus' row
+         pattern_pos= {tileToColumn[qN - 4], tileToRow[latticeRow + 1]};
+         ptr_pattern= scene->itemAt(
+               mapToParent(pattern_pos.toPoint()), QTransform());
+         auto nexus= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
+         nexus->resetVertexID(GraphVertex::measure_char::Y);
+      }
+      else if (!p.startsWith("CNOT") && p != QChar(0x03C8) && p != "+"){
+         // all other patterns excluding CNOT_marker and (initialisation) psi:
+         // assemble qbits of the pattern
+
+         // collect all vertices of p
+         GraphVertex * p_rotate_HST[4];
+
+         // locate terminating qbit of preceding pattern on the row
+         unsigned long endQbitAddress= patternQbit1[p_row][p_column - 1];
+         // derive first qbit of p from terminating qbit of previous pattern
+         auto qN {endQbitAddress + 1};
+
+         for (int i= 0; i < 4; ++i) {
+            pattern_pos= {tileToColumn[qN], tileToRow[latticeRow]};
+            ptr_pattern= scene->itemAt(
+                  mapToParent(pattern_pos.toPoint()), QTransform());
+            p_rotate_HST[i]= qgraphicsitem_cast<GraphVertex *>(ptr_pattern);
+
+            qN += 1;
+         }
+
+         if (p == "Hadamard"){   // Clifford pattern: Hadamard
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::Y);
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::Y);
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::Y);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p == "S"){   // Clifford pattern: 'S' phase
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::Y);
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p.startsWith("X")){   // '_-rotation' patterns
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::l_xi);
+
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p.startsWith("Y")){
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::X);
+
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::l_zeta);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p.startsWith("Z")){
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::X);
+
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::l_eta);
+
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::X);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X);
+         }
+         else if (p == "T"){
+            // the vertex transformations of Raussendorf and Briegel (2002)
+            // 'general rotation' will stand-in for a T-pattern
+            p_rotate_HST[0]->resetVertexID(GraphVertex::measure_char::l_xi, Qt::blue);
+            p_rotate_HST[1]->resetVertexID(GraphVertex::measure_char::l_eta, Qt::blue);
+            p_rotate_HST[2]->resetVertexID(GraphVertex::measure_char::l_zeta, Qt::blue);
+            p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X, Qt::blue);
+         }
+      }
+
+      patternRowColumn= inStream.readLine();
    }
 
    loadfile.close();
@@ -488,7 +836,7 @@ void GraphView::mousePressEvent(QMouseEvent * event) {
          clabel->clear();
          return ;
       }
-      vertex1_X = qgraphicsitem_cast<GraphVertex *>(item);
+      vertex1_X= qgraphicsitem_cast<GraphVertex *>(item);
 
       // ABORT: first vertex must have >= 1 edge for local complementation
       if (vertex1_X->alledges->isEmpty()){
