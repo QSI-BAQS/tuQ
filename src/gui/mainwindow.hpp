@@ -1,7 +1,7 @@
 #ifndef TUQ_MAINWINDOW_HPP
 #define TUQ_MAINWINDOW_HPP
 
-#include "mode_compiler/compilerview.hpp"
+//#include "mode_compiler/compilerview.hpp"
 #include "mode_modeller/graphview.hpp"
 #include "gui_helpers.hpp"
 #include "mode_simulator/simulatorview.hpp"
@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
    open_mode modellerOpen {open_mode::graph};
 
    GraphSelect * settings {};
-   CompilerView * view_compiler {};
+//   CompilerView * view_compiler {};
    GraphView * view_modeller {};
    SimulatorView * view_simulator {};
 
