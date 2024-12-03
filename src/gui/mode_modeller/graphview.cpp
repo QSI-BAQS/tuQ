@@ -108,21 +108,21 @@ void GraphView::openAlgorithm(const QString & afile) {
    QString downCNOT= "CNOT t" % QChar(0x2193);
    QString upCNOT= "CNOT t" % QChar(0x2191);
    while (!cnots.isNull()) {
+      tiles.push_back(cnots);
+
       int tileCounter {0};
       int matrixCol {0};
-      QString tc, tile;
+      QString tile;
 
       QStringList instanceCNOT= cnots.split(QChar(' '));
       if (instanceCNOT.length() == 4){
          tile= instanceCNOT.at(0) % " " % instanceCNOT.at(1);
-         tc= instanceCNOT.at(2);
-         tileCounter= tc.toInt();
+         tileCounter= instanceCNOT.at(2).toInt();
          matrixCol= instanceCNOT.at(3).toInt();
       }
       else if (instanceCNOT.length() == 3){
          tile= instanceCNOT.at(0);
-         tc= instanceCNOT.at(1);
-         tileCounter= tc.toInt();
+         tileCounter= instanceCNOT.at(1).toInt();
          matrixCol= instanceCNOT.at(2).toInt();
       }
 
@@ -131,8 +131,6 @@ void GraphView::openAlgorithm(const QString & afile) {
          maxTile= tileCounter;
       if (matrixCol > columnDimension)
          columnDimension= matrixCol;
-
-      tiles.push_back(tile % " " % tc);
 
       // set the lattice row of both CNOT downwards arrow and CNOT upwards
       // arrow
@@ -158,10 +156,11 @@ void GraphView::openAlgorithm(const QString & afile) {
       cnots= inStream.readLine();
    }
 
+   loadfile.close();
+
    // generic pattern variables
    QPointF pattern_pos;
    QGraphicsItem * ptr_pattern {nullptr};
-   QString tile {""};
 
    // initialise each 'wire' row of the lattice
    for (int i= 0; i < maxTile + 1; ++i) {
@@ -186,125 +185,129 @@ void GraphView::openAlgorithm(const QString & afile) {
    // positions
    unsigned long patternQbit1[maxTile + 1][columnDimension + 1];
 
-   // 'populate patternQbit1', iteration 1: set default value to zero
+   // 'populate patternQbit1', iteration 1: set patternQbit1 to default value
+   // to zero and replicate the matrix as 'eachPatternSize'
    for (int r= 0; r < maxTile + 1; ++r) {
       for (int c= 0; c < columnDimension + 1; ++c) {
          patternQbit1[r][c]= 0;
       }
    }
 
-   // 'populate patternQbit1', iteration 2: set with count of qbits in individual
-   // patterns, accounting for any 'lumpiness' in row lengths
-   int tctr {0};
-
+   unsigned long eachPatternSize[maxTile + 1][columnDimension + 1];
    for (int r= 0; r < maxTile + 1; ++r) {
       for (int c= 0; c < columnDimension + 1; ++c) {
-         QString pPlusRow= tiles.at(tctr);
-
-         // account for 'lumpy' row lengths
-         int lws= pPlusRow.lastIndexOf(" ");
-         auto p= pPlusRow.leftRef(lws).trimmed();
-         int plusRow= pPlusRow.midRef(lws).trimmed().toInt();
-
-         if (plusRow > r)
-            break ;
-
-         // in every case, 'psi' initialisation qbit begins a row and '+'
-         // readout qbit closes a row
-         if (p.startsWith(QChar(0x03C8)) || p == "+")
-            patternQbit1[r][c]= 0;
-         else if (p.startsWith(QChar(0x03C3)))
-            patternQbit1[r][c]= 1;   // tile = measurement, basis X/Y/Z
-         else if (p.startsWith("CNOT"))
-            patternQbit1[r][c]= 6;   // ** Note: includes tile 'CNOT_marker' **
-         else
-            patternQbit1[r][c]= 4;   // all other patterns
-
-         if (pPlusRow != tiles.last())
-            tctr += 1;
+         eachPatternSize[r][c]= 0;
       }
    }
 
-   // 'populate patternQbit1', iteration 3: transition pattern counts of
-   // iteration 2 to cumulative count of qbits by pattern, accounting for any
-   // 'lumpiness' in row lengths
-   unsigned long lastQbit1, qbit1;
+   // (QVector) 'tiles' variables
+   QString p;
+   int plusColumn, plusRow;
 
+   // 'populate patternQbit1', iteration 2: set matrix, eachPatternSize with
+   // count of qbits in individual patterns
+   for (auto prc : tiles) {
+      QStringList pPlusRowPlusColumn= prc.split(QChar(' '));
+
+      if (pPlusRowPlusColumn.length() == 4){
+         p= pPlusRowPlusColumn.at(0) % " " % pPlusRowPlusColumn.at(1);
+         plusRow= pPlusRowPlusColumn.at(2).toInt();
+         plusColumn= pPlusRowPlusColumn.at(3).toInt();
+      }
+      else if (pPlusRowPlusColumn.length() == 3){
+         p= pPlusRowPlusColumn.at(0);
+         plusRow= pPlusRowPlusColumn.at(1).toInt();
+         plusColumn= pPlusRowPlusColumn.at(2).toInt();
+      }
+
+      // in every case, 'psi' initialisation qbit begins a row and '+'
+      // readout qbit closes a row
+      if (p.startsWith(QChar(0x03C8)) || p == "+")
+         eachPatternSize[plusRow][plusColumn]= 0;
+      else if (p.startsWith(QChar(0x03C3)))
+         eachPatternSize[plusRow][plusColumn]= 1;   // tile = measurement, basis X/Y/Z
+      else if (p.startsWith("CNOT"))
+         eachPatternSize[plusRow][plusColumn]= 6;   // ** Note: includes tile 'CNOT_marker' **
+      else
+         eachPatternSize[plusRow][plusColumn]= 4;   // all other patterns
+   }
+
+   // 'populate patternQbit1', iteration 3: write cumulative count of qbits by
+   // pattern to matrix patternQbit1 from individual pattern counts of matrix
+   // eachPatternSize
    for (int r= 0; r < maxTile + 1; ++r) {
-      for (int c= 1; c < columnDimension + 1; ++c) {
-         lastQbit1= patternQbit1[r][c - 1];
-         qbit1= patternQbit1[r][c];
+      unsigned long accumulator= 0;
+      for (int c= 0; c < columnDimension + 1; ++c) {
+         accumulator += eachPatternSize[r][c];
+         patternQbit1[r][c]= accumulator;
+      }
+   }
 
-         // account for 'lumpy' row lengths
-         if (c > 1 && qbit1 == 0)
-            break ;
+   // 'populate patternQbit1', iteration 4: overwrite the cumulative
+   // patternQbit1 value at any CNOT column with the greater of the cumulative
+   // counts of qbits at row m and row m + 1
+   QVector<QString> cnotsPos;
+   for (auto prc : tiles) {
+      if (prc.startsWith("CNOT "))
+         cnotsPos.push_back(prc);
+   }
 
-         // align CNOT control and target at the easternmost qbit 1 of the two
-         // rows
-         if (qbit1 == 6){
-            // northern CNOT row
-            if (r + 1 <= maxTile){
-               unsigned long markerCheck= patternQbit1[r + 1][c];
-               unsigned long endQbitAddressSouth {0};
+   if (!cnotsPos.isEmpty()){
+      int cnotAtRow, cnotAtColumn;
 
-               if (markerCheck == 6){   // *** edge case: two neighbouring CNOTs, horizontally-aligned ***
-                  // calculate the cumulative qbits at CNOT's southern row
-                  for (int i= 0; i < c; ++i) {
-                     endQbitAddressSouth += patternQbit1[r + 1][i];
-                  }
+      for (QString ppos : cnotsPos) {
+         QStringList cnotrc= ppos.split(QChar(' '));
+         cnotAtRow= cnotrc.at(2).toInt();
+         cnotAtColumn= cnotrc.at(3).toInt();
 
-                  if (endQbitAddressSouth > lastQbit1)
-                     patternQbit1[r][c]= endQbitAddressSouth + qbit1;
-                  else
-                     patternQbit1[r][c]= lastQbit1 + qbit1;
-               }
-            }
-            else {   // southern CNOT row
-               unsigned long endQbitAddressNorth= patternQbit1[r - 1][c];
-               unsigned long indicativeQbit1= lastQbit1 + qbit1;
+         unsigned long northQbit1, southQbit1;
+         northQbit1= patternQbit1[cnotAtRow][cnotAtColumn];
+         southQbit1= patternQbit1[cnotAtRow + 1][cnotAtColumn];
 
-               if (endQbitAddressNorth > indicativeQbit1)
-                  patternQbit1[r][c]= endQbitAddressNorth;
-               else
-                  patternQbit1[r][c]= indicativeQbit1;
+         unsigned long accumulator {0};
+
+         if (northQbit1 > southQbit1){
+            patternQbit1[cnotAtRow + 1][cnotAtColumn]= northQbit1;
+
+            accumulator= northQbit1;
+
+            for (int c= cnotAtColumn + 1; c < columnDimension + 1; ++c) {
+               accumulator += eachPatternSize[cnotAtRow + 1][c];
+               patternQbit1[cnotAtRow + 1][c]= accumulator;
             }
          }
-         else
-            patternQbit1[r][c]= lastQbit1 + qbit1;
+         else if (southQbit1 > northQbit1){
+            patternQbit1[cnotAtRow][cnotAtColumn]= southQbit1;
+
+            accumulator= southQbit1;
+
+            for (int c= cnotAtColumn + 1; c < columnDimension + 1; ++c) {
+               accumulator += eachPatternSize[cnotAtRow][c];
+               patternQbit1[cnotAtRow][c]= accumulator;
+            }
+         }
       }
    }
 
-   // as with 'part 2 of [algorithm].txt read' above, the following
-   // inStream.readline() command must point to the QChar at spos + 1
-   inStream.seek(spos + 1);
-
-// second pass of [algorithm].txt: position all tiles as patterns on the
-// lattice
-   QString patternRowColumn= inStream.readLine();
-
-   // loop over [algorithm].txt to set vertex ID(s) to the pattern's required
-   // individual measurement(s)
-   int p_column {0};
-   QString p;
-   int p_row {0};
    // mapping [algorithm].txt row to lattice row
    int latticeRow;
 
-   while (!patternRowColumn.isNull()) {
+   // set vertex ID(s) to the pattern's required individual measurement(s)
+   for (auto patternRowColumn : tiles) {
       QStringList prc= patternRowColumn.split(QChar(' '));
       if (prc.length() == 4){
          p= prc.at(0) % " " % prc.at(1);
-         p_row= prc.at(2).toInt();
-         p_column= prc.at(3).toInt();
+         plusRow= prc.at(2).toInt();
+         plusColumn= prc.at(3).toInt();
       }
       else if (prc.length() == 3){
          p= prc.at(0);
-         p_row= prc.at(1).toInt();
-         p_column= prc.at(2).toInt();
+         plusRow= prc.at(1).toInt();
+         plusColumn= prc.at(2).toInt();
       }
 
       // Lattice row address
-      latticeRow= rowsTileToLattice[p_row];
+      latticeRow= rowsTileToLattice[plusRow];
 
       // set vertex id of readout pattern
       if (p == "+"){   // 'readout'
@@ -320,7 +323,7 @@ void GraphView::openAlgorithm(const QString & afile) {
       // set vertex id of all other patterns except initialisation and readout
       if (p.startsWith(QChar(0x03C3))){   // individual measurement
          // locate qbit 1 of p on the lattice
-         unsigned long qbitAddress= patternQbit1[p_row][p_column];
+         unsigned long qbitAddress= patternQbit1[plusRow][plusColumn];
          pattern_pos= {tileToColumn[qbitAddress], tileToRow[latticeRow]};
          ptr_pattern= scene->itemAt(mapToParent(pattern_pos.toPoint())
                , QTransform());
@@ -335,16 +338,13 @@ void GraphView::openAlgorithm(const QString & afile) {
             v_measure->resetVertexID(GraphVertex::measure_char::Z);
       }
       else if (p.startsWith("CNOT ")){
-         QString downCNOT {"CNOT t" % QChar(0x2193)};
-         QString upCNOT {"CNOT t" % QChar(0x2191)};
-
          // collect all vertices of p
          GraphVertex * p_CNOT[6];
 
          // extrapolate qbit 1 of the northern row of the CNOT from its
          // terminating qbit on this row.  Recall that qbit 1 of control and
          // target rows are aligned as positions in patternQbit1
-         unsigned long qN= patternQbit1[p_row][p_column] - 5;
+         unsigned long qN= patternQbit1[plusRow][plusColumn] - 5;
 
          // place northern row of CNOT
          for (int i= 0; i < 6; ++i) {
@@ -371,7 +371,7 @@ void GraphView::openAlgorithm(const QString & afile) {
          }
 
          // place southern row of CNOT
-         auto southRow= rowsTileToLattice[p_row + 1];
+         auto southRow= rowsTileToLattice[plusRow + 1];
          qN= qN - 6;
 
          for (int i= 0; i < 6; ++i) {
@@ -412,7 +412,7 @@ void GraphView::openAlgorithm(const QString & afile) {
          GraphVertex * p_rotate_HST[4];
 
          // locate terminating qbit of preceding pattern on the row
-         unsigned long endQbitAddress= patternQbit1[p_row][p_column - 1];
+         unsigned long endQbitAddress= patternQbit1[plusRow][plusColumn - 1];
          // derive first qbit of p from terminating qbit of previous pattern
          auto qN {endQbitAddress + 1};
 
@@ -468,11 +468,7 @@ void GraphView::openAlgorithm(const QString & afile) {
             p_rotate_HST[3]->resetVertexID(GraphVertex::measure_char::X, Qt::blue);
          }
       }
-
-      patternRowColumn= inStream.readLine();
    }
-
-   loadfile.close();
 }
 
 // read instructions, format .txt
