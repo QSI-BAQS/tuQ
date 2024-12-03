@@ -190,7 +190,7 @@ void MainWindow::setActions() {
 
    a_compile= new QAction(tr("Co&mpile"),this);
    a_compile->setShortcut(tr("Ctrl+m"));
-//   connect(a_compile,&QAction::triggered,[this](){ compile(); });
+   connect(a_compile,&QAction::triggered,[this](){ view_simulator->toQASM(); });
 
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
    a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
@@ -260,25 +260,25 @@ void MainWindow::setSimulator() {
 
 // set the QGraphicsView to instantiate as central widget
 void MainWindow::setView() {
-   if (view_setting == tuQ_mode::compiler){
+   if /*(view_setting == tuQ_mode::compiler){
       view_compiler= new CompilerView(this);
       view_compiler->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_compiler);
 
       setWindowTitle(tr("tuQ: mode_compiler"));
    }
-   else if (view_setting == tuQ_mode::modeller){
+   else if */(view_setting == tuQ_mode::modeller){
       view_modeller= new GraphView(this);
       view_modeller->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_modeller);
 
       setWindowTitle(tr("tuQ: mode_modeller"));
    }
-/*   else if (view_setting == tuQ_mode::simulator){
+   else if (view_setting == tuQ_mode::simulator){
       view_simulator= new SimulatorView(this);
       view_simulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_simulator);
 
       setWindowTitle(tr("tuQ: mode_simulator"));
-   }*/
+   }
 }
