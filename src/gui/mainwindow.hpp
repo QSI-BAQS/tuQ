@@ -48,7 +48,7 @@ class MainWindow : public QMainWindow
 
 private slots:
    void noSession();
-   void setCompiler();
+//   void setCompiler();
    void setModeller();
    void setSimulator();
 

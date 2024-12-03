@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget * parent)
    // tuQ settings, 'Simulator'
    connect(settings->buttons[1],&QPushButton::clicked,this, &MainWindow::setSimulator);
    // tuQ settings, 'Compiler'
-   connect(settings->buttons[2],&QPushButton::clicked,this, &MainWindow::setCompiler);
+   //connect(settings->buttons[2],&QPushButton::clicked,this, &MainWindow::setCompiler);
    // tuQ settings, 'Exit tuQ'
    connect(settings->buttons[3],&QPushButton::clicked, this, &MainWindow::noSession);
 
@@ -221,7 +221,7 @@ void MainWindow::setActions() {
    connect(a_saveGraph,&QAction::triggered,this
            ,[this](){ dialogSave(graphsavefile); });
 }
-
+/*
 void MainWindow::setCompiler() {
    // 'grey out' menu items
    a_addLattice->setEnabled(false);
@@ -235,7 +235,7 @@ void MainWindow::setCompiler() {
 
    settings->close();   // close dialog
 }
-
+*/
 void MainWindow::setModeller() {
    // 'grey out' menu items
    a_compile->setEnabled(false);
@@ -274,11 +274,11 @@ void MainWindow::setView() {
 
       setWindowTitle(tr("tuQ: mode_modeller"));
    }
-   else if (view_setting == tuQ_mode::simulator){
+/*   else if (view_setting == tuQ_mode::simulator){
       view_simulator= new SimulatorView(this);
       view_simulator->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
       setCentralWidget(view_simulator);
 
       setWindowTitle(tr("tuQ: mode_simulator"));
-   }
+   }*/
 }
