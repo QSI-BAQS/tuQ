@@ -35,6 +35,7 @@ public:
    void openAlgorithm(const QString &);
    void readCircuit(const QString &);
    void saveAlgorithm(const QString &, const unsigned long (&)[latticeDim]) const;
+   void toQASM(double (*)(QString)) const;
 };
 
 #endif //TUQ_SIMULATORVIEW_HPP
