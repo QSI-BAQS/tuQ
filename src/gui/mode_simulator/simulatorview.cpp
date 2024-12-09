@@ -4,6 +4,7 @@
 
 #include "simulatorview.hpp"
 
+#include <curl/curl.h>
 #include <QDebug>
 #include <QFile>
 #include <QScrollBar>
@@ -414,6 +415,143 @@ void SimulatorView::saveAlgorithm(const QString & wfile
    writefile.close();
 }
 
+void SimulatorView::toQASM(double (*theta)(QString tc)) const {
+   QFile filePOST("/path/to/file");
+
+   // save conditions: write-only, text
+   if (!filePOST.open(QIODevice::ReadWrite | QIODevice::Text)){
+      qDebug() << "file is not open";
+      return ;
+   }
+
+   QTextStream bodyPOST(&filePOST);
+
+   bodyPOST << "// tuQ graph state to OpenQASM\n" << "OPENQASM 3.0;\n\n"
+   << "include \"stdgates.inc\";\n";
+
+   // maximum count of columns by any row
+   unsigned long rows= sizeof(s_scene->columnAtRow) / sizeof(s_scene->columnAtRow[0]);
+   unsigned long maxColumn {0};
+   unsigned long maxRow {0};
+
+   for (int i= 0; i < rows; ++i) {
+      unsigned long columns= s_scene->columnAtRow[i];
+
+      if (columns > 0)
+         maxRow += 1;
+      if (columns > maxColumn)
+         maxColumn= columns;
+   }
+
+   // define 'wire' qbits
+   bodyPOST << "\n";
+   for (int i= 0; i < maxRow; ++i) {
+      bodyPOST << "qubit q" << i << ";\n";
+   }
+   // initialise the 'wire' qbits
+   bodyPOST << "\n// initialise qbits\n";
+   for (int i= 0; i < maxRow; ++i) {
+      bodyPOST << "reset q" << i << ";\n";
+   }
+
+   // (OpenQASM) body of the HTTP POST
+   QString downCNOT= "CNOT t" % QChar(0x2193);
+   QString marker {};
+   QString upCNOT= "CNOT t" % QChar(0x2191);
+
+   bodyPOST << "\n";
+   // column 0 is always the initialisation qubit
+   for (int c= 1; c < maxColumn; ++c) {
+      for (int r= 0; r < maxRow; ++r) {
+         QPointF pos= nodeAddress[r][c];
+
+         QGraphicsItem * p_itemAtPos= s_scene->itemAt(pos, QTransform());
+         if (p_itemAtPos == nullptr)
+            continue;
+         else {
+            auto * p_operatorAtPos= qgraphicsitem_cast<SignMeasure *>(
+                  p_itemAtPos);
+
+            // cluster-state measurements are inapplicable to OpenQASM targeted
+            // at a circuit-based QPU
+            if (p_operatorAtPos->showOperator() == QChar(0x03C3) % " x"
+            || p_operatorAtPos->showOperator() == QChar(0x03C3) % " y"
+            || p_operatorAtPos->showOperator() == QChar(0x03C3) % " z"
+            || p_operatorAtPos->showOperator() == "+")
+               continue ;
+
+            marker= p_operatorAtPos->showOperator();
+
+            // *** Note std::string-style concatenation inside a loop instead
+            // of QStringBuilder, which creates a dangling pointer ***
+            if (marker == downCNOT)
+               bodyPOST << "cx q" + QString::number(r) + " q" + QString::number(r + 1) + ";\n";
+            else if (marker == upCNOT)
+               bodyPOST << "cx q" + QString::number(r + 1) + " q" + QString::number(r) + ";\n";
+            else if (marker.endsWith("-rotation")){
+               QString axis= marker.at(0);
+               QString arg= axis + " " + QString::number(r) + " " + QString::number(c);
+
+               double rotation= theta(arg);
+
+               QString rotationPost= "r" + axis.toLower() + " (";
+
+               bodyPOST << rotationPost << rotation << ") q" << r << ";\n";
+            }
+            else if (marker == "Hadamard")
+               bodyPOST << "h q" << r << ";\n";
+            else if (marker == "S" || marker == "T"){
+               auto stGate= marker.toLower();
+               bodyPOST << stGate << " q" << r << ";\n";
+            }
+         }
+
+         marker.clear();
+      }
+   }
+
+   // insert 'measure' syntax
+   bodyPOST << "\n// measure qbits\n";
+   for (int i= 0; i < maxRow; ++i) {
+      bodyPOST << "measure q" << i << ";\n";
+   }
+
+   filePOST.close();
+/*
+   // basic POST to quantum facility API
+   CURL * curl;
+   CURLcode res;
+
+   // API string
+   std::string reqStrQASM {"http://pathto/api"};
+
+   // POST body data
+   if (!filePOST.open(QIODevice::ReadWrite | QIODevice::Text)){
+      qDebug() << "file is not open";
+      return ;
+   }
+   QTextStream toPOST(&filePOST);
+   std::string post= toPOST.readAll().toStdString();
+
+   // POST process
+   curl_global_init(CURL_GLOBAL_ALL);
+
+   curl= curl_easy_init();
+   if (curl){
+      curl_easy_setopt(curl, CURLOPT_URL, reqStrQASM.c_str());
+      curl_easy_setopt(curl, CURLOPT_POST, post.c_str());
+
+      res= curl_easy_perform(curl);
+      if (res != CURLE_OK){
+         qDebug() << "curl_easy_perform() failed: " << curl_easy_strerror(res)
+         << "\n";
+      }
+
+      curl_easy_cleanup(curl);
+   }
+   curl_global_cleanup();*/
+}
+
 
 // private
 void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
@@ -426,23 +564,17 @@ void SimulatorView::latticeFromPatterns(unsigned long placementRow) {
    // The One-Way Quantum Computer')
 
    auto ioStats= s_scene->p_stats;
-/*  TO DO: When latticeFromPatterns follows openAlgorithm, atStatsPos returns NULL
- *    07-NOV defining ioStats as s_scene->p_stats does not appear to be a fix
- *** 13-NOV defining westCNOT2 at level 'else if (pattern.startsWith("CNOT t"))'
- *** then changing it at level 'if (pattern == "CNOT t" % QChar(0x2193))' caused
- *** the pointer at columnLengths[placementRow].eastMarker to move, like this problem
- *qDebug() << "ioStats->p_perimeterS:" << ioStats->p_perimeterS << "; ioStats->p_perimeterE" << ioStats->p_perimeterE << "\n";
+/*  TO DO: calling latticeFromPatterns following openAlgorithm, atStatsPos returns NULL
  *   // openAlgorithm assigns mStat, nStat but does not update ioStats->p_perimeterS/E
  *   if (mStat > 1){
  *      *ioStats->p_perimeterS= mStat;
  *      mStat= 0;
  *   }
- *qDebug() << "*ioStats->p_perimeterS " << *ioStats->p_perimeterS << "; mStat " << mStat << "\n";
+ *
  *   if (nStat > 1){
  *      ioStats->set_perimeterE(nStat);
  *      nStat= 0;
  *   }
- *qDebug() << "*ioStats->p_perimeterE " << *ioStats->p_perimeterE << "; nStat " << nStat;
  */
    // account for |psi> as placed by AlgorithmLattice constructor or method,
    // addRow
