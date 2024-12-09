@@ -8,6 +8,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 
+find_package(CURL REQUIRED)
 find_package(Qt5 COMPONENTS
       Core
       Gui
@@ -32,9 +33,9 @@ add_executable(tuQ src/main.cpp
 
 target_include_directories(tuQ PRIVATE src/layout/)
 
+target_link_libraries(tuQ CURL::libcurl)
 target_link_libraries(tuQ
       Qt5::Core
       Qt5::Gui
       Qt5::Widgets
 )
-
