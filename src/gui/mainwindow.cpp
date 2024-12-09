@@ -190,7 +190,7 @@ void MainWindow::setActions() {
 
    a_compile= new QAction(tr("Co&mpile"),this);
    a_compile->setShortcut(tr("Ctrl+m"));
-   connect(a_compile,&QAction::triggered,[this](){ view_simulator->toQASM(); });
+   connect(a_compile,&QAction::triggered,[this](){ view_simulator->toQASM(theta); });
 
    a_openAlgorithm= new QAction(tr("Open Al&gorithm"),this);
    a_openAlgorithm->setShortcut(tr("Ctrl+Alt+o"));
@@ -280,5 +280,45 @@ void MainWindow::setView() {
       setCentralWidget(view_simulator);
 
       setWindowTitle(tr("tuQ: mode_simulator"));
+   }
+}
+
+double MainWindow::theta(QString tile) {
+   // obtain theta of 0-1 for X/Y/Z-rotation through an input Dialog
+   // pre-condition: an X/Y/Z-rotation component of (Simulator) algorithm
+   // post-condition: specified X/Y/Z-rotation component of openQASM output
+
+   auto * dialog= new InputDialog("rotation theta");
+
+   // tile format: rotation axis-row-column
+   QString column, rotation, row;
+
+   QStringList rotationSpec= tile.split(QChar(' '));
+   rotation= rotationSpec.at(0);
+   row= rotationSpec.at(1);
+   column= rotationSpec.at(2);
+
+   // rotation theta QLineEdit
+   QRegExp positive_decimal {"^(0(.[0-9]{1,2})|1.0)"};
+
+   auto * thetaLineEdit= new QLineEdit(dialog);
+   thetaLineEdit->setValidator(new QRegExpValidator(positive_decimal));
+   thetaLineEdit->setPlaceholderText("0.25");
+
+   auto label= rotation % "-rotation, tile [" % row % "," % column % "]";
+   dialog->form->insertRow(1,label, thetaLineEdit);
+
+   if (dialog->exec() == QDialog::Accepted){
+      // QLineEdit values set at QDialog::Accepted
+      auto thetaValue= thetaLineEdit->text().toDouble();
+
+      delete thetaLineEdit;
+
+      return thetaValue;
+   }
+   else {
+      delete thetaLineEdit;
+
+      return 0.0;
    }
 }

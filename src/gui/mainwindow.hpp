@@ -45,6 +45,7 @@ class MainWindow : public QMainWindow
    void readCircuitDialog(const QString *);
    void setActions();
    void setView();
+   static double theta(QString tile);
 
 private slots:
    void noSession();
