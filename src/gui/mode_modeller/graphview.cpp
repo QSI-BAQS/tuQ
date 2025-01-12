@@ -538,7 +538,7 @@ void GraphView::openGraph(const QString & rfile) {
          double epos_y;
          unsigned long edge_coordinates{1};
 
-         for (int counter= 3; counter < edge_stats.size() ; ++counter) {
+         for (int counter= 3; counter < edge_stats.size(); ++counter) {
             if (edge_coordinates % 2 == 0){
                epos_y= edge_stats.at(counter).toDouble();
                QPointF end_pos {epos_x,epos_y};
@@ -547,6 +547,7 @@ void GraphView::openGraph(const QString & rfile) {
                QGraphicsItem * ptr_other_v= scene->itemAt(
                      mapToParent(end_pos.toPoint()), QTransform());
                auto other_v= qgraphicsitem_cast<GraphVertex *>(ptr_other_v);
+
                // other_v is type GraphVertex?
                if (other_v->type() == 4){
                   auto * e= new GraphEdge(ref_v, other_v, edgemenu);
@@ -555,7 +556,6 @@ void GraphView::openGraph(const QString & rfile) {
 
                   scene->addItem(e);
                }
-
                epos_x= 0;
                epos_y= 0;
             }
@@ -621,6 +621,8 @@ void GraphView::saveGraph(const QString & wfile) {
    }
 
    QTextStream write(&writefile);
+   QList<QString> noFlips {};
+
    for (QGraphicsItem * item : scene->items()) {
       // save only type GraphVertex specifications
       if (item->type() == 4){
@@ -632,13 +634,19 @@ void GraphView::saveGraph(const QString & wfile) {
          << v->pos().x() << " " << v->pos().y();
          // edge coordinates (unique, i.e. no 'flips')
          for (const GraphEdge * e: *v->alledges) {
-            if ((e->p1vertex->x() != v->pos().x() &&
-            e->p2vertex->x() == v->pos().x())
-            && (e->p1vertex->y() != v->pos().y() &&
-            e->p2vertex->y() == v->pos().y()))
-               write << " " << e->p2vertex->x() << " " << e->p2vertex->y();
-            else
-               write << " " << e->p1vertex->x() << " " << e->p1vertex->y();
+            // end positions of edge
+            QString fstPos {QString::number(e->p1vertex->x())
+            + " " + QString::number(e->p1vertex->y())};
+            QString sndPos {QString::number(e->p2vertex->x())
+            + " " + QString::number(e->p2vertex->y())};
+
+            QStringBuilder testEdge {fstPos % " " % sndPos};
+            QStringBuilder flipEdge {sndPos % " " % fstPos};
+
+            if (!noFlips.contains(testEdge) && !noFlips.contains(flipEdge)){
+               noFlips.push_back(testEdge);
+               write << " " << testEdge;
+            }
          }
          write << "\n";
       }
