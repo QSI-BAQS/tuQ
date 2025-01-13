@@ -288,7 +288,8 @@ double MainWindow::theta(QString tile) {
    // pre-condition: an X/Y/Z-rotation component of (Simulator) algorithm
    // post-condition: specified X/Y/Z-rotation component of openQASM output
 
-   auto * dialog= new InputDialog("rotation theta");
+   QString rt {"rotation " % QChar(0x03B8)};
+   auto * dialog= new InputDialog(rt);
 
    // tile format: rotation axis-row-column
    QString column, rotation, row;
